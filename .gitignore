@@ -1,0 +1,20 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.venv/
+venv/
+
+# Experiment artifacts
+experiments/
+logs/
+
+# Dataset cache
+data/
+
+# Editors
+.DS_Store
+.idea/
+.vscode/

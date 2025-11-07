@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+src/sftdg/__init__.py
+src/sftdg.egg-info/PKG-INFO
+src/sftdg.egg-info/SOURCES.txt
+src/sftdg.egg-info/dependency_links.txt
+src/sftdg.egg-info/top_level.txt
+src/sftdg/algorithms/__init__.py
+src/sftdg/algorithms/base.py
+src/sftdg/algorithms/registry.py
+src/sftdg/algorithms/sft.py
+src/sftdg/data/__init__.py
+src/sftdg/data/domainbed_datasets.py
+src/sftdg/utils/__init__.py
+src/sftdg/utils/misc.py

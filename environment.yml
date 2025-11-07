@@ -1,0 +1,34 @@
+name: sftdg
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pytorch=2.2.2
+  - torchvision=0.17.2
+  - pytorch-cuda=12.1
+  - cudnn
+  - numpy
+  - scipy
+  - scikit-learn
+  - pillow
+  - pandas
+  - matplotlib
+  - tqdm
+  - h5py
+  - pyyaml
+  - pip
+  - pip:
+      - git+https://github.com/facebookresearch/DomainBed.git@main#egg=domainbed
+      - hydra-core==1.3.2
+      - omegaconf==2.3.0
+      - tensorboard
+      - termcolor
+      - fvcore
+      - timm==0.9.12
+      - yacs
+      - rich
+      - wandb
+      - gdown
