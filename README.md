@@ -1,178 +1,142 @@
-# Seeking Consistent Flat Minima (SFT) for Domain Generalization
+# HyperDG
 
-This repository scaffolds a PyTorch implementation of **SFT** from the CVPR 2025 paper *“Seeking Consistent Flat Minima for Better Domain Generalization via Refining Loss Landscapes”*. The long–term goal is to reproduce the VLCS and PACS results reported in Table&nbsp;1 of the paper using a ResNet‑50 backbone on the DomainBed protocol.
+**Paper title:** *HyperDG: Hyperbolic Representation Alignment for Robust Domain Generalization via Curvature Refinement*  
+(Under review as a TMLR submission; see `docs/HyperDG_TMLR.pdf`)
 
-We currently provide:
-- A project structure aligned with DomainBed experiments.
-- Conda environment specification for PyTorch + torchvision + supporting libraries.
-- Configuration templates for VLCS and PACS.
-- Training script skeleton that will host the SFT algorithm.
+This repository contains the PyTorch + DomainBed implementation of **HyperDG**.
 
-## Repository layout
+## Method Summary
 
-```
+HyperDG optimizes a supervised objective with geometry-aware regularization:
+
+\[
+\mathcal{L} = \mathcal{L}_{sup}
++ \alpha\,\mathcal{L}_{curv}
++ \beta\,\mathcal{L}_{align}
++ \gamma\,\mathcal{L}_{sharp}
++ \delta_l\,\mathcal{L}_{local}
++ \delta_g\,\mathcal{L}_{global}
+\]
+
+Implemented in `src/sftdg/algorithms/hyperdg.py`:
+- Learnable per-domain and global curvature.
+- Tangent-space feature alignment across source domains.
+- Sharpness/local/global flatness regularization.
+- Unified optimization of backbone/classifier and curvature parameters.
+
+## Repository Layout
+
+```text
 .
-├── configs/             # Dataset/backbone/hyperparameter configs
-├── experiments/         # Checkpoints, logs, metrics (gitignored)
-├── logs/                # TensorBoard event files (gitignored)
-├── scripts/             # Utility entry points (train/eval/download)
-├── src/sftdg/           # Python package with algorithms, data, models, utils
-├── environment.yml      # Conda environment spec
+├── configs/             # Dataset and training YAMLs
+├── docs/                # Paper PDF and notes
+├── experiments/         # Outputs/checkpoints/config copies (mostly gitignored)
+├── figures/             # Figure scripts/assets
+├── scripts/             # Train/eval/aggregation/ablation utilities
+├── src/sftdg/           # Algorithms, models, utils
+├── environment.yml      # Conda environment
 └── README.md
 ```
 
-## Environment setup (Miniconda)
+## Environment Setup
 
 ```bash
 conda env create -f environment.yml
 conda activate sftdg
 python -m pip install -e .
+export PYTHONPATH=$PYTHONPATH:$(pwd)/third_party/domainbed
 ```
 
-The environment ships with CUDA‐enabled PyTorch 2.2/torchvision 0.17 (adjust the CUDA build in `environment.yml` if you are on a different driver version). DomainBed and other utilities install via `pip` in the post–create step.
+## Dataset Setup
 
-## Dataset preparation
+DomainBed-style data roots are expected via dataset config files in `configs/datasets/`.
 
-Experiments assume the DomainBed data layout:
-
-```
-data/
-  VLCS/
-    Caltech101/
-    LabelMe/
-    SUN09/
-    VOC2007/
-  PACS/
-    art_painting/
-    cartoon/
-    photo/
-    sketch/
-```
-
-Prepare datasets with:
+Quick download helper (currently VLCS/PACS):
 
 ```bash
-conda activate sftdg
 python scripts/download_datasets.py --root data --datasets VLCS PACS
 ```
 
-The download script reuses DomainBed mirrors (Google Drive + AWS). If you already maintain a shared dataset store, pass `--root /path/to/datasets` instead and update the config files.
+For OfficeHome, TerraIncognita, and DomainNet, place datasets in the paths specified by:
+- `configs/datasets/officehome.yaml`
+- `configs/datasets/terraincognita.yaml`
+- `configs/datasets/domainnet.yaml`
 
-## Running training (placeholder)
+## Training
 
-Training and evaluation entry points live in `scripts/train.py` and `scripts/evaluate.py`. After implementing the SFT algorithm, commands will follow the template:
-
-```bash
-python scripts/train.py --config configs/training/resnet50_sft_vlcs.yaml
-python scripts/train.py --config configs/training/resnet50_sft_pacs.yaml
-```
-
-Outputs (checkpoints, metrics, TensorBoard traces) default to `experiments/` and `logs/`.
-
-### FlatLand curvature alignment
-
-The `flatland` algorithm replaces the original SFT objective with curvature alignment in Lorentz space. Base configs are available:
+### ResNet-50 HyperDG (single run)
 
 ```bash
-python scripts/train.py --config configs/training/resnet50_flatland_vlcs.yaml
-python scripts/train.py --config configs/training/resnet50_flatland_pacs.yaml
+python scripts/train.py --config configs/training/resnet50_hyperdg_vlcs.yaml --device cuda
+python scripts/train.py --config configs/training/resnet50_hyperdg_pacs.yaml --device cuda
+python scripts/train.py --config configs/training/resnet50_hyperdg_officehome.yaml --device cuda
 ```
 
-Split-specific configs live in `experiments/configs/flatland_{vlcs,pacs}_split*.yaml`. Use the helper to run all splits sequentially:
+### Split sweeps (all domains)
+
+Pre-generated split configs are in `experiments/configs/`.
 
 ```bash
-conda activate sftdg
-export PYTHONPATH=$PYTHONPATH:$(pwd)/third_party/domainbed
-./scripts/run_splits.sh flatland_vlcs
-./scripts/run_splits.sh flatland_pacs
+./run_all_hyperdg.sh vlcs 4
+./run_all_hyperdg.sh pacs 4
+./run_all_hyperdg.sh officehome 4
+./run_all_hyperdg.sh domainnet 6
 ```
 
-### HyperDG (Curvature-flatness refinement)
+### ViT HyperDG sweeps
 
 ```bash
-python scripts/train.py --config configs/training/resnet50_hyperdg_vlcs.yaml
-python scripts/train.py --config configs/training/resnet50_hyperdg_pacs.yaml
+python scripts/create_vit_configs.py --backbones vitb16 vitl14 --datasets vlcs pacs officehome terraincognita domainnet
+./scripts/run_vit_sweeps.sh vitb16 officehome 4
+./scripts/run_vit_sweeps.sh vitl14 pacs 4
 ```
 
-Split configs: `experiments/configs/hyperdg_{vlcs,pacs}_split*.yaml`
+## Ablations
+
+### Key ablations used in your Table-5 style comparison
+
+- **w/o \(L_{fb}\)**: `gamma_sharp=0`, `delta_local_flat=0`, `delta_global_flat=0`
+  - Config base: `configs/training/vitb16_hyperdg_officehome_wo_lfb.yaml`
+- **w/o \(L_{var}\)**: `alpha_curv=0`
+  - Config base: `configs/training/vitb16_hyperdg_officehome_wo_lvar.yaml`
+
+Run split configs already materialized in `experiments/configs/`:
 
 ```bash
-conda activate sftdg
-export PYTHONPATH=$PYTHONPATH:$(pwd)/third_party/domainbed
-./scripts/run_splits.sh hyperdg_vlcs
-./scripts/run_splits.sh hyperdg_pacs
+for split in 0 1 2 3; do
+  CUDA_VISIBLE_DEVICES=$((split % 4)) python3 scripts/train.py \
+    --config experiments/configs/vitb16_hyperdg_officehome_wo_lfb_split${split}.yaml \
+    --device cuda
+done
+
+for split in 0 1 2 3; do
+  CUDA_VISIBLE_DEVICES=$((split % 4)) python3 scripts/train.py \
+    --config experiments/configs/vitb16_hyperdg_officehome_wo_lvar_split${split}.yaml \
+    --device cuda
+done
 ```
 
-### Ablation sweeps
-
-- **SFT (OfficeHome Table 4 replica)**  
-  ```bash
-  python scripts/run_ablation_grid.py \
-    --schedule sft_table4 \
-    --base-config configs/training/resnet50_sft_officehome.yaml \
-    --gpus 0,1,2,3 --device cuda
-  ```
-
-- **HyperDG (component analysis)**  
-  ```bash
-  python scripts/run_ablation_grid.py \
-    --schedule hyperdg_components \
-    --base-config configs/training/resnet50_hyperdg_officehome.yaml \
-    --gpus 0,1,2,3 --device cuda
-  ```
-
-- **HyperDG (penalty rebalance sweep for Exp. 7–10)**  
-  ```bash
-  python scripts/run_ablation_grid.py \
-    --schedule hyperdg_penalty_sweep \
-    --base-config configs/training/resnet50_hyperdg_officehome.yaml \
-    --gpus 0,1,2,3 --device cuda
-  ```
-  Use `--only exp07_curv_align exp08_curv_align_sharp exp09_curv_align_local exp10_full`
-  to restrict to the tuned rows.
-
-The helper auto-detects GPUs (unless `--gpus` is supplied), writes configs to
-`experiments/configs/ablations/<schedule>/`, and streams logs to `logs/ablations/<schedule>/expXX*.log`.
-Use `--only exp07 exp08` to run a subset or `--dry-run` to print the commands without launching jobs.
-Summarize the resulting metrics with:
+## Metrics Aggregation
 
 ```bash
-python scripts/summarize_ablation.py \
-  --runs-root experiments/ablations/<schedule> \
-  --config-root experiments/configs/ablations/<schedule> \
-  --env-names Art Clipart Product RealWorld
+python scripts/aggregate_metrics.py --root experiments/vitb16_hyperdg_officehome --num-envs 4 --verbose
+python scripts/aggregate_metrics.py --root experiments/vitb16_hyperdg_officehome_wo_lfb --num-envs 4 --verbose
+python scripts/aggregate_metrics.py --root experiments/vitb16_hyperdg_officehome_wo_lvar --num-envs 4 --verbose
 ```
 
-Plot validation curves (per run) to check stability:
+## Notes
 
-```bash
-python scripts/plot_ablation_curves.py \
-  --runs experiments/ablations/<schedule>/exp10_full_alpha04_beta02_gamma001_deltas002 \
-         experiments/ablations/<schedule>/exp10_full_alpha03_beta03_gamma002_deltas005 \
-  --env-names Art Clipart Product RealWorld \
-  --moving-average 5
+- The package path remains `sftdg` for compatibility with existing code.
+- `algorithm: hyperdg` is the active method entry in training configs.
+- If you regenerate configs, keep naming consistent with `hyperdg_*` for scripts that expect those paths.
+
+## Citation
+
+```bibtex
+@article{hyperdg2026,
+  title   = {HyperDG: Hyperbolic Representation Alignment for Robust Domain Generalization via Curvature Refinement},
+  author  = {Anonymous},
+  journal = {TMLR (under review)},
+  year    = {2026}
+}
 ```
-
-Figures land in `plots/ablations/`.
-
-## Reproduction checklist
-
-| Task | Status | Notes |
-| --- | --- | --- |
-| Project scaffolding | ✅ | Base structure + configs + scripts |
-| Dataset download utility | ⏳ | Implement mirrored download helpers |
-| SFT algorithm core (feedback + refinement) | ⏳ | Requires model/refiner code & training loop |
-| Validation loop + DomainBed metrics | ⏳ | |
-| VLCS reproduction (ResNet‑50) | ⏳ | Target: 79.8% ± 0.1 |
-| PACS reproduction (ResNet‑50) | ⏳ | Target: 88.3% ± 0.3 |
-
-## Next steps
-
-1. Fill in `download_datasets.py` to materialize VLCS and PACS.
-2. Implement `src/sftdg/data/domainbed_datasets.py` to wrap DomainBed splits.
-3. Implement `src/sftdg/models/resnet_backbone.py` to load ImageNet‑pretrained ResNet‑50 with frozen BN.
-4. Implement `src/sftdg/algorithms/sft.py`, covering Algorithm&nbsp;1 & 2 (feedback/refinement) plus SAM w/ soft labels.
-5. Finalize `scripts/train.py` to orchestrate config loading, seeding, logging, checkpointing, and evaluation loops.
-6. Run VLCS/PACS sweeps, compute domain‑wise accuracy, and compare to Table&nbsp;1.
-
-Track progress in the checklist above and update configs as hyperparameters converge toward reported numbers.
