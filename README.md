@@ -87,21 +87,73 @@ export PYTHONPATH=$PYTHONPATH:$(pwd)/third_party/domainbed
 ./scripts/run_splits.sh flatland_pacs
 ```
 
-### FedCuri (Curvature-flatness refinement)
+### HyperDG (Curvature-flatness refinement)
 
 ```bash
-python scripts/train.py --config configs/training/resnet50_fedcuri_vlcs.yaml
-python scripts/train.py --config configs/training/resnet50_fedcuri_pacs.yaml
+python scripts/train.py --config configs/training/resnet50_hyperdg_vlcs.yaml
+python scripts/train.py --config configs/training/resnet50_hyperdg_pacs.yaml
 ```
 
-Split configs: `experiments/configs/fedcuri_{vlcs,pacs}_split*.yaml`
+Split configs: `experiments/configs/hyperdg_{vlcs,pacs}_split*.yaml`
 
 ```bash
 conda activate sftdg
 export PYTHONPATH=$PYTHONPATH:$(pwd)/third_party/domainbed
-./scripts/run_splits.sh fedcuri_vlcs
-./scripts/run_splits.sh fedcuri_pacs
+./scripts/run_splits.sh hyperdg_vlcs
+./scripts/run_splits.sh hyperdg_pacs
 ```
+
+### Ablation sweeps
+
+- **SFT (OfficeHome Table 4 replica)**  
+  ```bash
+  python scripts/run_ablation_grid.py \
+    --schedule sft_table4 \
+    --base-config configs/training/resnet50_sft_officehome.yaml \
+    --gpus 0,1,2,3 --device cuda
+  ```
+
+- **HyperDG (component analysis)**  
+  ```bash
+  python scripts/run_ablation_grid.py \
+    --schedule hyperdg_components \
+    --base-config configs/training/resnet50_hyperdg_officehome.yaml \
+    --gpus 0,1,2,3 --device cuda
+  ```
+
+- **HyperDG (penalty rebalance sweep for Exp. 7–10)**  
+  ```bash
+  python scripts/run_ablation_grid.py \
+    --schedule hyperdg_penalty_sweep \
+    --base-config configs/training/resnet50_hyperdg_officehome.yaml \
+    --gpus 0,1,2,3 --device cuda
+  ```
+  Use `--only exp07_curv_align exp08_curv_align_sharp exp09_curv_align_local exp10_full`
+  to restrict to the tuned rows.
+
+The helper auto-detects GPUs (unless `--gpus` is supplied), writes configs to
+`experiments/configs/ablations/<schedule>/`, and streams logs to `logs/ablations/<schedule>/expXX*.log`.
+Use `--only exp07 exp08` to run a subset or `--dry-run` to print the commands without launching jobs.
+Summarize the resulting metrics with:
+
+```bash
+python scripts/summarize_ablation.py \
+  --runs-root experiments/ablations/<schedule> \
+  --config-root experiments/configs/ablations/<schedule> \
+  --env-names Art Clipart Product RealWorld
+```
+
+Plot validation curves (per run) to check stability:
+
+```bash
+python scripts/plot_ablation_curves.py \
+  --runs experiments/ablations/<schedule>/exp10_full_alpha04_beta02_gamma001_deltas002 \
+         experiments/ablations/<schedule>/exp10_full_alpha03_beta03_gamma002_deltas005 \
+  --env-names Art Clipart Product RealWorld \
+  --moving-average 5
+```
+
+Figures land in `plots/ablations/`.
 
 ## Reproduction checklist
 

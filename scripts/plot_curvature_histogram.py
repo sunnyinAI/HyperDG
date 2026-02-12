@@ -35,6 +35,11 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=20,
     )
+    parser.add_argument(
+        "--density",
+        action="store_true",
+        help="Plot probability density instead of counts (useful when many samples are available).",
+    )
     return parser.parse_args()
 
 
@@ -58,13 +63,14 @@ def main() -> None:
         plt.hist(
             curvatures,
             bins=args.bins,
-            density=True,
-            alpha=0.45,
+            density=args.density,
+            alpha=0.65,
             label=label,
+            edgecolor="white",
         )
 
     plt.xlabel("Curvature value $K$")
-    plt.ylabel("Density")
+    plt.ylabel("Density" if args.density else "Count")
     plt.title("Curvature distributions across domains")
     plt.legend()
     plt.grid(alpha=0.2, linestyle="--")

@@ -11,6 +11,7 @@ from domainbed import networks
 
 from .base import Algorithm
 from .registry import register_algorithm
+from sftdg.models import build_featurizer
 
 
 @register_algorithm("flatland")
@@ -26,7 +27,7 @@ class FlatLandLorentz(Algorithm):
         super().__init__(input_shape, num_classes, num_domains, hparams)
 
         self.num_domains = num_domains
-        self.featurizer = networks.Featurizer(input_shape, hparams)
+        self.featurizer = build_featurizer(input_shape, hparams)
         self.classifier = networks.Classifier(
             self.featurizer.n_outputs,
             num_classes,

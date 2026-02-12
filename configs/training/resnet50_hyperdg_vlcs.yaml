@@ -1,12 +1,12 @@
-experiment_name: fedcuri_resnet50_pacs
+experiment_name: hyperdg_resnet50_vlcs
 seed: 0
-output_dir: experiments/fedcuri_pacs
+output_dir: experiments/hyperdg_vlcs
 device: cuda
 
 dataset:
-  config: configs/datasets/pacs.yaml
+  config: configs/datasets/vlcs.yaml
 
-algorithm: fedcuri
+algorithm: hyperdg
 
 hparams:
   lr: 5.0e-5

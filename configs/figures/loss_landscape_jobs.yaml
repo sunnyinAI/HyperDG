@@ -1,0 +1,96 @@
+jobs:
+  - name: vlcs_split0
+    description: "VLCS split-0: SFT vs HyperDG."
+    axis_labels: ["Curvature perturbation ΔK", "Embedding projection β"]
+    contour: true
+    annotate_min: true
+    baseline:
+      label: "SFT"
+      config: configs/training/resnet50_sft_vlcs.yaml
+      checkpoint: experiments/vlcs/split0/model_last.pt
+      output: data/loss_sft_vlcs_split0.npy
+      grid_size: 41
+      delta: 1.5
+      env_mode: test
+      max_samples: 2048
+      batch_size: 128
+    ours:
+      label: "HyperDG"
+      config: configs/training/resnet50_hyperdg_vlcs.yaml
+      checkpoint: experiments/hyperdg_vlcs/split0/model_last.pt
+      output: data/loss_hyperdg_vlcs_split0.npy
+      grid_size: 41
+      delta: 1.5
+      env_mode: test
+      max_samples: 2048
+      batch_size: 128
+    outputs:
+      png: figures/fig_loss_surface_vlcs_split0.png
+      pdf: figures/fig_loss_surface_vlcs_split0.pdf
+      delta: 1.5
+      dpi_png: 300
+      dpi_pdf: 600
+
+  - name: pacs_split0
+    description: "PACS split-0: SFT vs HyperDG."
+    axis_labels: ["Curvature perturbation ΔK", "Embedding projection β"]
+    contour: true
+    annotate_min: true
+    baseline:
+      label: "SFT"
+      config: configs/training/resnet50_sft_pacs.yaml
+      checkpoint: experiments/pacs/split0/model_last.pt
+      output: data/loss_sft_pacs_split0.npy
+      grid_size: 41
+      delta: 1.5
+      env_mode: test
+      max_samples: 2048
+      batch_size: 128
+    ours:
+      label: "HyperDG"
+      config: configs/training/resnet50_hyperdg_pacs.yaml
+      checkpoint: experiments/hyperdg_pacs/split0/model_last.pt
+      output: data/loss_hyperdg_pacs_split0.npy
+      grid_size: 41
+      delta: 1.5
+      env_mode: test
+      max_samples: 2048
+      batch_size: 128
+    outputs:
+      png: figures/fig_loss_surface_pacs_split0.png
+      pdf: figures/fig_loss_surface_pacs_split0.pdf
+      delta: 1.5
+      dpi_png: 300
+      dpi_pdf: 600
+
+  - name: officehome_split0
+    description: "OfficeHome split-0: SFT vs HyperDG."
+    axis_labels: ["Curvature perturbation ΔK", "Embedding projection β"]
+    contour: true
+    annotate_min: true
+    baseline:
+      label: "SFT"
+      config: configs/training/resnet50_sft_officehome.yaml
+      checkpoint: experiments/officehome/split0/model_last.pt
+      output: data/loss_sft_officehome_split0.npy
+      grid_size: 41
+      delta: 1.5
+      env_mode: test
+      max_samples: 2048
+      batch_size: 128
+    ours:
+      label: "HyperDG"
+      config: configs/training/resnet50_hyperdg_officehome.yaml
+      checkpoint: experiments/hyperdg_officehome/split0/model_last.pt
+      output: data/loss_hyperdg_officehome_split0.npy
+      grid_size: 41
+      delta: 1.5
+      env_mode: test
+      max_samples: 2048
+      batch_size: 128
+    outputs:
+      png: figures/fig_loss_surface_officehome_split0.png
+      pdf: figures/fig_loss_surface_officehome_split0.pdf
+      delta: 1.5
+      dpi_png: 300
+      dpi_pdf: 600

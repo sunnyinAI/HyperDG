@@ -5,12 +5,13 @@ from __future__ import annotations
 from typing import Sequence, Tuple
 
 import torch
+import torch.nn.functional as F
 from torch import nn
 from domainbed import networks
 
 from .base import Algorithm
 from .registry import register_algorithm
-from sftdg.models import LabelRefiner
+from sftdg.models import LabelRefiner, build_featurizer
 from sftdg.utils import project_distribution
 
 
@@ -43,7 +44,7 @@ class SFTAlgorithm(Algorithm):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super().__init__(input_shape, num_classes, num_domains, hparams)
 
-        self.featurizer = networks.Featurizer(input_shape, hparams)
+        self.featurizer = build_featurizer(input_shape, hparams)
         self.classifier = networks.Classifier(
             self.featurizer.n_outputs,
             num_classes,
@@ -55,6 +56,16 @@ class SFTAlgorithm(Algorithm):
         self.alpha = hparams.get("alpha", 1.5)
         self.lambda1 = hparams.get("lambda1", 0.5)
         self.lambda2 = hparams.get("lambda2", 0.5)
+        self.label_mode = hparams.get("label_mode", "refined").lower()
+        self.label_smoothing = float(hparams.get("label_smoothing", 0.0))
+        valid_modes = {"one_hot", "smoothed", "refined"}
+        if self.label_mode not in valid_modes:
+            raise ValueError(
+                f"Unsupported label_mode '{self.label_mode}'. "
+                f"Expected one of {sorted(valid_modes)}"
+            )
+        self.enable_refiner = self.label_mode == "refined"
+        self.use_pce = bool(hparams.get("use_pce", True))
         self.grad_clip = hparams.get("grad_clip_norm", 5.0)
         hidden_dim = hparams.get("refiner_hidden_dim", 256)
         hidden_layers = hparams.get("refiner_layers", 2)
@@ -84,8 +95,23 @@ class SFTAlgorithm(Algorithm):
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         return self.network(x)
 
+    def _one_hot(self, labels: torch.Tensor) -> torch.Tensor:
+        return F.one_hot(labels, num_classes=self.num_classes).to(dtype=torch.float32)
+
+    def _smoothed_targets(self, labels: torch.Tensor) -> torch.Tensor:
+        if self.label_smoothing <= 0.0:
+            return self._one_hot(labels)
+        smooth = self.label_smoothing / max(self.num_classes, 1)
+        return self._one_hot(labels) * (1.0 - self.label_smoothing) + smooth
+
     def _generate_soft_targets(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Generate projected soft labels (stop-gradient for model step)."""
+        if self.label_mode == "one_hot":
+            return self._one_hot(labels)
+        if self.label_mode == "smoothed":
+            return self._smoothed_targets(labels)
+        if not self.enable_refiner:
+            raise RuntimeError("Refiner disabled but refined labels requested.")
         with torch.no_grad():
             ref_logits = self.refiner(logits)
             probs = torch.softmax(ref_logits, dim=1)
@@ -139,6 +165,9 @@ class SFTAlgorithm(Algorithm):
         labels_b: torch.Tensor,
         sharpness_gap: torch.Tensor,
     ) -> torch.Tensor:
+        if not self.enable_refiner:
+            return torch.tensor(0.0, device=logits_a.device)
+
         logits_a = logits_a.detach()
         logits_b = logits_b.detach()
 
@@ -148,9 +177,12 @@ class SFTAlgorithm(Algorithm):
         proj_a = project_distribution(probs_a.detach(), labels_a, self.alpha)
         proj_b = project_distribution(probs_b.detach(), labels_b, self.alpha)
 
-        lpce_a = -(proj_a * torch.log(probs_a + self.eps)).sum(dim=1).mean()
-        lpce_b = -(proj_b * torch.log(probs_b + self.eps)).sum(dim=1).mean()
-        lpce = 0.5 * (lpce_a + lpce_b)
+        if self.use_pce:
+            lpce_a = -(proj_a * torch.log(probs_a + self.eps)).sum(dim=1).mean()
+            lpce_b = -(proj_b * torch.log(probs_b + self.eps)).sum(dim=1).mean()
+            lpce = 0.5 * (lpce_a + lpce_b)
+        else:
+            lpce = torch.tensor(0.0, device=logits_a.device)
 
         ce_a = -(proj_a * torch.log_softmax(logits_a, dim=1)).sum(dim=1).mean()
         ce_b = -(proj_b * torch.log_softmax(logits_b, dim=1)).sum(dim=1).mean()
@@ -192,9 +224,12 @@ class SFTAlgorithm(Algorithm):
             logits_b_detach = self.network(xb)
 
         sharp_gap = torch.abs(sharpness_a - sharpness_b)
-        refine_loss = self._refiner_update(
-            logits_a_detach, ya, logits_b_detach, yb, sharp_gap
-        )
+        if self.enable_refiner:
+            refine_loss = self._refiner_update(
+                logits_a_detach, ya, logits_b_detach, yb, sharp_gap
+            )
+        else:
+            refine_loss = torch.tensor(0.0, device=device)
 
         with torch.no_grad():
             total_correct = 0

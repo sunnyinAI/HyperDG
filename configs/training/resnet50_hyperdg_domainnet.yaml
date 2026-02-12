@@ -1,13 +1,10 @@
-experiment_name: fedcuri_resnet50_vlcs
+experiment_name: hyperdg_resnet50_domainnet
 seed: 0
-output_dir: experiments/fedcuri_vlcs
+output_dir: experiments/hyperdg_domainnet
 device: cuda
-
 dataset:
-  config: configs/datasets/vlcs.yaml
-
-algorithm: fedcuri
-
+  config: configs/datasets/domainnet.yaml
+algorithm: hyperdg
 hparams:
   lr: 5.0e-5
   curvature_lr: 1.0e-4

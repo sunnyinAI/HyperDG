@@ -10,6 +10,7 @@ venv/
 # Experiment artifacts
 experiments/
 logs/
+HyperbolicDGS/
 
 # Dataset cache
 data/

@@ -1,4 +1,4 @@
-"""FedCuri: Curvature-refined federated domain generalization."""
+"""HyperDG: Curvature-refined federated domain generalization."""
 
 from __future__ import annotations
 
@@ -11,20 +11,21 @@ from domainbed import networks
 
 from .base import Algorithm
 from .registry import register_algorithm
+from sftdg.models import build_featurizer
 
 
 def _softplus_curvature(params: torch.Tensor, eps: float) -> torch.Tensor:
     return torch.nn.functional.softplus(params) + eps
 
 
-@register_algorithm("fedcuri")
-class FedCuri(Algorithm):
+@register_algorithm("hyperdg")
+class HyperDG(Algorithm):
     """Implements curvature alignment + flatness regularisation."""
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super().__init__(input_shape, num_classes, num_domains, hparams)
 
-        self.featurizer = networks.Featurizer(input_shape, hparams)
+        self.featurizer = build_featurizer(input_shape, hparams)
         feat_dim = self.featurizer.n_outputs
         self.classifier = networks.Classifier(
             feat_dim,
@@ -91,7 +92,7 @@ class FedCuri(Algorithm):
         device = next(self.featurizer.parameters()).device
         batches = [(x.to(device), y.to(device)) for x, y in minibatches]
         if not batches:
-            raise ValueError("FedCuri requires at least one minibatch.")
+            raise ValueError("HyperDG requires at least one minibatch.")
 
         curvatures = _softplus_curvature(self.log_curvatures, self.curv_eps)
         global_curv = _softplus_curvature(self.log_global_curvature, self.curv_eps)

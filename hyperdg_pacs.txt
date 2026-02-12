@@ -1,0 +1,7 @@
+split0: env1=84.35% env2=95.09% env3=96.41% env4=92.99% avg=92.21%
+split1: env1=89.24% env2=79.49% env3=98.20% env4=94.27% avg=90.30%
+split2: env1=89.98% env2=95.09% env3=94.61% env4=94.27% avg=93.48%
+split3: env1=95.35% env2=94.66% env3=97.90% env4=82.93% avg=92.71%
+Splits: 4
+Mean accuracy: 92.18%
+Std: 1.36%

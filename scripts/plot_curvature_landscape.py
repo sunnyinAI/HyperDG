@@ -1,4 +1,4 @@
-"""Generate loss landscape plots for FedCuri / curvature-aware algorithms."""
+"""Generate loss landscape plots for HyperDG / curvature-aware algorithms."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ def parse_args() -> argparse.Namespace:
         default=-1,
         help="Maximum samples per domain to estimate losses",
     )
-    parser.add_argument("--output", type=str, default="fedcuri_landscape.png")
+    parser.add_argument("--output", type=str, default="hyperdg_landscape.png")
     parser.add_argument("--json", type=str, default=None, help="Optional JSON export")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
@@ -222,7 +222,7 @@ def main() -> None:
             axes[1].plot(theta_vals, curv_np, color=colors[env_idx % len(colors)], label=f"Domain {env_idx}")
 
     axes[0].set_title("Without curvature alignment")
-    axes[1].set_title("FedCuri curvature-aligned")
+    axes[1].set_title("HyperDG curvature-aligned")
     for ax in axes:
         ax.set_xlabel(r"$\theta$")
         ax.set_ylabel("Loss")
