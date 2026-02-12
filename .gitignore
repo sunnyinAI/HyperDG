@@ -19,3 +19,7 @@ data/
 .DS_Store
 .idea/
 .vscode/
+
+# Legacy paper artifacts (removed from repo history moving forward)
+SFT_CVPR2025.pdf
+SFT_CVPR2025.txt
