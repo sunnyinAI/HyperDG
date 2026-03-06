@@ -1,0 +1,5 @@
+dataset: WILDSCamelyon
+data_dir: data/wilds
+holdout_fraction: 0.2
+test_envs: [0]
+num_workers: 2

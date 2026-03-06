@@ -125,6 +125,8 @@ def main() -> None:
 
     dataset_class = db_datasets.get_dataset_class(dataset_name)
     dataset = dataset_class(dataset_cfg["data_dir"], test_envs, hparams)
+    if "num_workers" in dataset_cfg:
+        dataset.N_WORKERS = int(dataset_cfg["num_workers"])
 
     train_loaders, eval_loaders, _ = prepare_splits(
         dataset, test_envs, hparams, holdout_fraction, seed
@@ -142,6 +144,7 @@ def main() -> None:
     train_iterator = zip(*train_loaders)
     n_steps = int(hparams.get("n_steps", dataset.N_STEPS))
     checkpoint_freq = int(hparams.get("checkpoint_freq", dataset.CHECKPOINT_FREQ))
+    eval_on_start = bool(cfg.get("eval_on_start", True))
 
     checkpoint_path = output_dir / "model_last.pt"
 
@@ -153,7 +156,10 @@ def main() -> None:
             metrics = algorithm.update(minibatches)
             metrics["step"] = step
 
-            if step % checkpoint_freq == 0 or step == n_steps - 1:
+            should_eval = step % checkpoint_freq == 0 or step == n_steps - 1
+            if step == 0 and not eval_on_start and n_steps > 1:
+                should_eval = False
+            if should_eval:
                 algorithm.eval()
                 for name, loader, weights in eval_loaders:
                     acc = db_misc.accuracy(algorithm, loader, weights, device)
@@ -166,6 +172,8 @@ def main() -> None:
                         metrics["curvature_mean"] = curvatures.mean().item()
                         metrics["curvature_std"] = curvatures.std(unbiased=False).item()
                         metrics["curvature_var"] = metrics["curvature_std"] ** 2
+                        for d_idx, k_val in enumerate(curvatures.tolist()):
+                            metrics[f"curvature_domain_{d_idx}"] = k_val
                 algorithm.train()
                 print(
                     f"[{step:05d}/{n_steps}] "

@@ -482,10 +482,78 @@ HYPERDG_PENALTY_SWEEP = [
     },
 ]
 
+# ---------------------------------------------------------------------------
+# SAM ablation schedule  (reviewer request: "Ablate SAM")
+#
+# Goal: isolate the curvature-alignment contribution from the SAM-like
+# flatness terms (gamma_sharp, delta_local_flat, delta_global_flat).
+#
+# Four conditions:
+#   1. ERM baseline     – all penalties off
+#   2. SAM-like only    – flatness terms on, curvature/alignment off
+#   3. HyperDG w/o SAM – curvature + alignment on, flatness terms off
+#   4. HyperDG full     – all terms on (matches exp10_full)
+# ---------------------------------------------------------------------------
+HYPERDG_SAM_ABLATION = [
+    {
+        "name": "sam_abl_01_erm",
+        "description": "ERM baseline: all HyperDG penalties off",
+        "overrides": {
+            "hparams": {
+                "alpha_curv": 0.0,
+                "beta_align": 0.0,
+                "gamma_sharp": 0.0,
+                "delta_local_flat": 0.0,
+                "delta_global_flat": 0.0,
+            }
+        },
+    },
+    {
+        "name": "sam_abl_02_sam_only",
+        "description": "SAM-like only: flatness terms on, curvature/alignment off",
+        "overrides": {
+            "hparams": {
+                "alpha_curv": 0.0,
+                "beta_align": 0.0,
+                "gamma_sharp": 0.05,
+                "delta_local_flat": 0.1,
+                "delta_global_flat": 0.1,
+            }
+        },
+    },
+    {
+        "name": "sam_abl_03_hyperdg_no_sam",
+        "description": "HyperDG w/o SAM: curvature + alignment only, flatness off",
+        "overrides": {
+            "hparams": {
+                "alpha_curv": 0.2,
+                "beta_align": 0.5,
+                "gamma_sharp": 0.0,
+                "delta_local_flat": 0.0,
+                "delta_global_flat": 0.0,
+            }
+        },
+    },
+    {
+        "name": "sam_abl_04_hyperdg_full",
+        "description": "HyperDG full: curvature + alignment + SAM-like flatness",
+        "overrides": {
+            "hparams": {
+                "alpha_curv": 0.2,
+                "beta_align": 0.5,
+                "gamma_sharp": 0.05,
+                "delta_local_flat": 0.1,
+                "delta_global_flat": 0.1,
+            }
+        },
+    },
+]
+
 SCHEDULES = {
     "sft_table4": SFT_TABLE4_EXPERIMENTS,
     "hyperdg_components": HYPERDG_COMPONENTS_EXPERIMENTS,
     "hyperdg_penalty_sweep": HYPERDG_PENALTY_SWEEP,
+    "hyperdg_sam_ablation": HYPERDG_SAM_ABLATION,
 }
 
 
@@ -503,7 +571,8 @@ def parse_args() -> argparse.Namespace:
         "--schedule",
         choices=sorted(SCHEDULES.keys()),
         default="sft_table4",
-        help="Predefined ablation schedule to run (e.g. sft_table4, hyperdg_components).",
+        help="Predefined ablation schedule to run (e.g. sft_table4, hyperdg_components, "
+        "hyperdg_sam_ablation).",
     )
     parser.add_argument(
         "--gpus",
