@@ -43,7 +43,12 @@ class HyperDG(Algorithm):
         self.delta_global = hparams.get("delta_global_flat", 0.1)
         curvature_lr = hparams.get("curvature_lr", hparams["lr"])
 
-        self.log_curvatures = nn.Parameter(torch.zeros(num_domains))
+        # single_curvature=True collapses all per-domain α_i into one shared α
+        self.single_curvature = bool(hparams.get("single_curvature", False))
+        if self.single_curvature:
+            self.log_curvatures = nn.Parameter(torch.zeros(1))
+        else:
+            self.log_curvatures = nn.Parameter(torch.zeros(num_domains))
         self.log_global_curvature = nn.Parameter(torch.tensor(0.0))
 
         self.optimizer_main = torch.optim.Adam(
@@ -107,7 +112,11 @@ class HyperDG(Algorithm):
         for env_idx, (x, y) in enumerate(batches):
             feats = self.featurizer(x)
 
-            tangent_local = self._tangent_embedding(feats, curvatures[env_idx])
+            # For single_curvature, all domains share curvatures[0]
+            curv_param = self.log_curvatures[0] if self.single_curvature else self.log_curvatures[env_idx]
+            curv_val = curvatures[0] if self.single_curvature else curvatures[env_idx]
+
+            tangent_local = self._tangent_embedding(feats, curv_val)
             logits_local = self.classifier(tangent_local)
             sup_loss = F.cross_entropy(logits_local, y)
             sup_losses.append(sup_loss)
@@ -118,13 +127,13 @@ class HyperDG(Algorithm):
 
             grad_log = torch.autograd.grad(
                 sup_loss,
-                self.log_curvatures[env_idx],
+                curv_param,
                 retain_graph=True,
                 create_graph=True,
                 allow_unused=True,
             )[0]
             if grad_log is None:
-                grad_val = torch.zeros_like(self.log_curvatures[env_idx])
+                grad_val = torch.zeros_like(curv_param)
             else:
                 grad_val = grad_log
             local_grad_terms.append(grad_val.abs())
@@ -140,10 +149,15 @@ class HyperDG(Algorithm):
         weight_tensor = weight_tensor / (weight_tensor.sum() + 1e-8)
         align_loss = self._alignment_loss(tangent_means, weight_tensor)
 
-        curv_diff = curvatures.unsqueeze(0) - curvatures.unsqueeze(1)
-        curv_loss = (curv_diff ** 2).mean()
+        # Curvature variance loss: zero when single_curvature (nothing to penalise)
+        if self.single_curvature:
+            curv_loss = torch.tensor(0.0, device=device)
+        else:
+            curv_diff = curvatures.unsqueeze(0) - curvatures.unsqueeze(1)
+            curv_loss = (curv_diff ** 2).mean()
 
-        sharp_loss = self._sharpness_proxy(tangent_norms, curvatures)
+        sharp_curv = curvatures.expand(len(tangent_norms)) if self.single_curvature else curvatures
+        sharp_loss = self._sharpness_proxy(tangent_norms, sharp_curv)
 
         local_flat_loss = torch.stack(local_grad_terms).mean()
         global_flat_terms = [
@@ -190,5 +204,6 @@ class HyperDG(Algorithm):
             "train_acc": train_acc,
             "mean_curvature": curvatures.mean().item(),
             "global_curvature": global_curv.item(),
+            "single_curvature_mode": int(self.single_curvature),
         }
         return metrics

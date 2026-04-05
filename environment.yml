@@ -32,3 +32,4 @@ dependencies:
       - rich
       - wandb
       - gdown
+      - beautifulsoup4
