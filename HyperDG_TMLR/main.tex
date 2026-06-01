@@ -25,6 +25,7 @@
 % \usepackage[pagenumbers]{cvpr} % To force page numbers, e.g. for an arXiv version
 \usepackage{booktabs}
 \usepackage{xcolor}
+\usepackage{amssymb}    % for \bigstar in figure captions
 
 \title{HyperDG: Does Per-Domain Hyperbolic Curvature Help Domain Generalization? \\ A Controlled Test on a Pretrained Backbone}
 
@@ -919,6 +920,27 @@ variants suggests that the shared hyperbolic-codepath itself not any
 single one of the auxiliary losses is mildly harmful on OfficeHome
 within our fine-tuning budget.
 
+Figure~\ref{fig:forest} summarizes the same comparison visually:
+plotted are the 12 paired effects (4 datasets $\times$ 3 HyperDG
+variants), centered on the mean difference and with 95\% confidence
+intervals from the same paired $t$-test. Three of the 12 effects are
+statistically significant and all three are on OfficeHome, all three
+in the negative direction.  The remaining nine effects straddle zero.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.96\linewidth]{fig_forest_erm_vs_hyperdg.pdf}
+    \caption{\textbf{Paired effect of each HyperDG variant relative to
+    ERM through the same codepath.}  Markers are the mean of the 16
+    paired (seed, split) accuracy differences; horizontal bars are 95\%
+    confidence intervals from the paired $t$-test.  The dashed vertical
+    line at zero is the no-effect reference. Stars ($\bigstar$) mark
+    effects significant at $\alpha = 0.05$. The only consistent
+    signal is on OfficeHome and it favors ERM; on the other three
+    datasets HyperDG and ERM cannot be distinguished.}
+    \label{fig:forest}
+\end{figure}
+
 \textbf{Reading the table.} The block above the rule is for situational
 context only: those numbers come from the cited sources and use each
 method's own training pipeline, so direct cell-by-cell comparison against
@@ -1092,49 +1114,64 @@ gains came from.
 
 
 
-\subsection{Curvature response diagnostics}
-\label{sec:curv_sensitivity}
+\subsection{Geometric diagnostics: structure does emerge, but it is not the radial-hierarchy structure the conjecture predicts}
+\label{sec:geometry_diagnostics}
 
-For completeness, we retain a curvature-perturbation diagnostic from the
-earlier draft (Figure~\ref{fig:curv_plots}). For each split we perturb the
-final learned curvature $K_i$ within a fixed range and measure the resulting
-shift in projected embeddings. Compared to embeddings obtained by inserting a
-Lorentz layer on top of an SFT-trained model, HyperDG produces visibly
-smoother responses i.e.\ the geometry is locally stable under
-curvature perturbations. We emphasize that this is a \emph{descriptive}
-geometric property, not a generalization claim: as established in
-Sections~\ref{sec:main_results}--\ref{sec:lvar_sweep}, this geometric
-stability does not translate into a measurable held-out accuracy gain over
-ERM in our controlled multi-seed comparison.
+A natural follow-up question to Sections~\ref{sec:main_results}--\ref{sec:lvar_sweep}
+is whether HyperDG learns \emph{any} non-trivial hyperbolic structure
+at all even if it doesn't help generalization. Two diagnostics give
+complementary answers.
 
-\FloatBarrier
+\textbf{Class clusters do form on the Poincar\'e disk
+(Figure~\ref{fig:poincare_main}).} Projecting the per-domain tangent
+features through a fixed exponential map and stereographic projection
+yields cleanly separated class clusters whose centroids are stable
+across domains. The framework is not failing to learn structure; the
+classifier is doing its job, and the hyperbolic projection is faithful.
+
+\textbf{But the radial axis is barely used to encode hierarchy
+(Figure~\ref{fig:norm_violin}).} The motivating story behind
+per-domain learnable curvature is that classes (or groups of classes)
+will occupy different radial depths on the disk, exploiting hyperbolic
+volume growth. Empirically the tangent-norm medians for all seven
+PACS classes collapse into a narrow band (12.0--12.5 across three
+domains, against a within-class IQR of 0.1--0.3). The angular
+direction does the discriminative work, exactly as in the Euclidean
+case; the radial coordinate is essentially unused. This is consistent
+with Section~\ref{sec:trajectories}: the geometric machinery is doing
+something, but not the thing the conjecture proposed.
+
 \begin{figure}[t]
     \centering
-    \begin{subfigure}[t]{0.32\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{fig_loss_surface_officehome_split0.pdf}
-        \caption{Office-Home}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.32\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{fig_loss_surface_pacs_split0.pdf}
-        \caption{PACS}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.32\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{fig_loss_surface_vlcs_split0.pdf}
-        \caption{VLCS}
-    \end{subfigure}
-    \caption{
-    \textbf{Curvature response diagnostics (descriptive, not predictive).}
-    HyperDG (right of each plot) yields smoother responses to curvature
-    perturbations than SFT (left), but this geometric stability does not
-    translate into a measurable held-out accuracy gain in our controlled
-    multi-seed comparison (Tables~\ref{tab:fedcuri_dg},~\ref{tab:loo}).
-    }
-    \label{fig:curv_plots}
+    \includegraphics[width=0.96\linewidth]{fig_poincare_pacs_main.pdf}
+    \caption{\textbf{Per-domain class-prototype Poincar\'e disks
+    (HyperDG, PACS, split 0).} Each panel is one training domain; each
+    point is one test sample projected via the learned tangent
+    embedding. Color encodes class; rings mark per-class centroids.
+    Clusters are clean and stable across domains the framework
+    \emph{does} learn meaningful structure, but as
+    Figure~\ref{fig:norm_violin} shows, that structure is angular
+    rather than radial-hierarchical, which is what the per-domain
+    curvature parameterization was supposed to exploit.}
+    \label{fig:poincare_main}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{fig_norm_violin_pacs.pdf}
+    \caption{\textbf{Per-class tangent-norm distribution (HyperDG,
+    PACS, split 0).} Each violin is the distribution of
+    $\|v\|_2 = \|\mathrm{feats} / \sqrt{K_i}\|_2$ for one class within
+    one training domain (500 samples per class). Medians collapse into
+    a narrow $\sim$0.5-unit band against an absolute scale of $\sim$12,
+    meaning the radial coordinate of the disk is doing essentially no
+    work in separating classes. The classifier discriminates by
+    angular direction the same regime in which a Euclidean
+    classifier on these features would also operate. This is
+    direct visual evidence that the motivating hyperbolic intuition
+    (different classes at different curvature-induced depths) does
+    not materialize in this setting.}
+    \label{fig:norm_violin}
 \end{figure}
 
 \section{Discussion: why doesn't the hyperbolic story land here?}
