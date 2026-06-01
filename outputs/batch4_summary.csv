@@ -1,0 +1,17 @@
+condition,dataset,n_runs,mean_acc,std_acc,p_vs_erm_paired
+ERM (all losses off),pacs,16,84.0414,7.0979,
+ERM (all losses off),vlcs,16,75.6254,13.3187,
+ERM (all losses off),officehome,16,67.0541,10.2633,
+ERM (all losses off),terraincognita,16,43.8989,8.4943,
+Full HyperDG (alpha_var=0.2),pacs,16,84.4955,7.4530,0.5336
+Full HyperDG (alpha_var=0.2),vlcs,16,75.4709,14.1442,0.7130
+Full HyperDG (alpha_var=0.2),officehome,16,66.0317,9.9829,0.0128
+Full HyperDG (alpha_var=0.2),terraincognita,16,43.1663,4.9717,0.6313
+Curvature frozen (no learning),pacs,16,84.6673,7.4177,0.3014
+Curvature frozen (no learning),vlcs,16,76.2697,13.1670,0.2370
+Curvature frozen (no learning),officehome,16,66.1296,9.7768,0.0200
+Curvature frozen (no learning),terraincognita,16,44.3034,6.7440,0.7838
+No variance reg (alpha_var=0),pacs,16,84.5703,6.9173,0.4220
+No variance reg (alpha_var=0),vlcs,16,75.0391,14.2549,0.3481
+No variance reg (alpha_var=0),officehome,16,66.0272,9.7509,0.0168
+No variance reg (alpha_var=0),terraincognita,16,43.8993,6.9377,0.0206

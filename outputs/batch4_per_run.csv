@@ -1,0 +1,257 @@
+condition,dataset,seed,split,acc
+ERM (all losses off),terraincognita,0,0,58.4615
+ERM (all losses off),terraincognita,0,1,40.7066
+ERM (all losses off),terraincognita,0,2,46.6418
+ERM (all losses off),terraincognita,0,3,38.7255
+ERM (all losses off),terraincognita,1,0,48.5128
+ERM (all losses off),terraincognita,1,1,47.3118
+ERM (all losses off),terraincognita,1,2,36.6915
+ERM (all losses off),terraincognita,1,3,35.1307
+ERM (all losses off),terraincognita,2,0,61.1282
+ERM (all losses off),terraincognita,2,1,44.6493
+ERM (all losses off),terraincognita,2,2,43.5323
+ERM (all losses off),terraincognita,2,3,32.3529
+ERM (all losses off),terraincognita,3,0,53.6410
+ERM (all losses off),terraincognita,3,1,36.3543
+ERM (all losses off),terraincognita,3,2,43.6567
+ERM (all losses off),terraincognita,3,3,34.8856
+ERM (all losses off),officehome,0,0,61.0309
+ERM (all losses off),officehome,0,1,53.3792
+ERM (all losses off),officehome,0,2,77.5648
+ERM (all losses off),officehome,0,3,77.0379
+ERM (all losses off),officehome,1,0,58.1443
+ERM (all losses off),officehome,1,1,52.1191
+ERM (all losses off),officehome,1,2,77.2266
+ERM (all losses off),officehome,1,3,74.7417
+ERM (all losses off),officehome,2,0,62.0619
+ERM (all losses off),officehome,2,1,54.0664
+ERM (all losses off),officehome,2,2,74.6336
+ERM (all losses off),officehome,2,3,78.4156
+ERM (all losses off),officehome,3,0,61.4433
+ERM (all losses off),officehome,3,1,57.8465
+ERM (all losses off),officehome,3,2,75.1973
+ERM (all losses off),officehome,3,3,77.9564
+ERM (all losses off),pacs,0,0,81.1736
+ERM (all losses off),pacs,0,1,79.4872
+ERM (all losses off),pacs,0,2,94.3114
+ERM (all losses off),pacs,0,3,81.4013
+ERM (all losses off),pacs,1,0,85.3301
+ERM (all losses off),pacs,1,1,76.2821
+ERM (all losses off),pacs,1,2,94.6108
+ERM (all losses off),pacs,1,3,81.6561
+ERM (all losses off),pacs,2,0,78.9731
+ERM (all losses off),pacs,2,1,78.2051
+ERM (all losses off),pacs,2,2,96.4072
+ERM (all losses off),pacs,2,3,78.3439
+ERM (all losses off),pacs,3,0,84.3521
+ERM (all losses off),pacs,3,1,76.7094
+ERM (all losses off),pacs,3,2,95.5090
+ERM (all losses off),pacs,3,3,81.9108
+ERM (all losses off),vlcs,0,0,96.8198
+ERM (all losses off),vlcs,0,1,62.6415
+ERM (all losses off),vlcs,0,2,74.3902
+ERM (all losses off),vlcs,0,3,73.1852
+ERM (all losses off),vlcs,1,0,95.0530
+ERM (all losses off),vlcs,1,1,64.5283
+ERM (all losses off),vlcs,1,2,66.3110
+ERM (all losses off),vlcs,1,3,72.4444
+ERM (all losses off),vlcs,2,0,97.1731
+ERM (all losses off),vlcs,2,1,58.4906
+ERM (all losses off),vlcs,2,2,72.8659
+ERM (all losses off),vlcs,2,3,75.8519
+ERM (all losses off),vlcs,3,0,95.7597
+ERM (all losses off),vlcs,3,1,60.7547
+ERM (all losses off),vlcs,3,2,74.8476
+ERM (all losses off),vlcs,3,3,68.8889
+Full HyperDG (alpha_var=0.2),terraincognita,0,0,48.0000
+Full HyperDG (alpha_var=0.2),terraincognita,0,1,38.8121
+Full HyperDG (alpha_var=0.2),terraincognita,0,2,48.2587
+Full HyperDG (alpha_var=0.2),terraincognita,0,3,38.5621
+Full HyperDG (alpha_var=0.2),terraincognita,1,0,44.8205
+Full HyperDG (alpha_var=0.2),terraincognita,1,1,44.9053
+Full HyperDG (alpha_var=0.2),terraincognita,1,2,41.7910
+Full HyperDG (alpha_var=0.2),terraincognita,1,3,35.6209
+Full HyperDG (alpha_var=0.2),terraincognita,2,0,46.6667
+Full HyperDG (alpha_var=0.2),terraincognita,2,1,38.9145
+Full HyperDG (alpha_var=0.2),terraincognita,2,2,48.8806
+Full HyperDG (alpha_var=0.2),terraincognita,2,3,37.7451
+Full HyperDG (alpha_var=0.2),terraincognita,3,0,49.4359
+Full HyperDG (alpha_var=0.2),terraincognita,3,1,39.2729
+Full HyperDG (alpha_var=0.2),terraincognita,3,2,50.2488
+Full HyperDG (alpha_var=0.2),terraincognita,3,3,38.7255
+Full HyperDG (alpha_var=0.2),officehome,0,0,61.4433
+Full HyperDG (alpha_var=0.2),officehome,0,1,54.7537
+Full HyperDG (alpha_var=0.2),officehome,0,2,75.5355
+Full HyperDG (alpha_var=0.2),officehome,0,3,75.2009
+Full HyperDG (alpha_var=0.2),officehome,1,0,57.1134
+Full HyperDG (alpha_var=0.2),officehome,1,1,49.0263
+Full HyperDG (alpha_var=0.2),officehome,1,2,75.4228
+Full HyperDG (alpha_var=0.2),officehome,1,3,73.4788
+Full HyperDG (alpha_var=0.2),officehome,2,0,59.1753
+Full HyperDG (alpha_var=0.2),officehome,2,1,54.0664
+Full HyperDG (alpha_var=0.2),officehome,2,2,76.2120
+Full HyperDG (alpha_var=0.2),officehome,2,3,77.1527
+Full HyperDG (alpha_var=0.2),officehome,3,0,62.0619
+Full HyperDG (alpha_var=0.2),officehome,3,1,56.9301
+Full HyperDG (alpha_var=0.2),officehome,3,2,73.6189
+Full HyperDG (alpha_var=0.2),officehome,3,3,75.3157
+Full HyperDG (alpha_var=0.2),pacs,0,0,83.1296
+Full HyperDG (alpha_var=0.2),pacs,0,1,80.9829
+Full HyperDG (alpha_var=0.2),pacs,0,2,95.8084
+Full HyperDG (alpha_var=0.2),pacs,0,3,79.1083
+Full HyperDG (alpha_var=0.2),pacs,1,0,85.5746
+Full HyperDG (alpha_var=0.2),pacs,1,1,82.6923
+Full HyperDG (alpha_var=0.2),pacs,1,2,96.4072
+Full HyperDG (alpha_var=0.2),pacs,1,3,78.0892
+Full HyperDG (alpha_var=0.2),pacs,2,0,76.5281
+Full HyperDG (alpha_var=0.2),pacs,2,1,80.7692
+Full HyperDG (alpha_var=0.2),pacs,2,2,97.3054
+Full HyperDG (alpha_var=0.2),pacs,2,3,80.2548
+Full HyperDG (alpha_var=0.2),pacs,3,0,78.7286
+Full HyperDG (alpha_var=0.2),pacs,3,1,76.7094
+Full HyperDG (alpha_var=0.2),pacs,3,2,95.5090
+Full HyperDG (alpha_var=0.2),pacs,3,3,84.3312
+Full HyperDG (alpha_var=0.2),vlcs,0,0,99.6466
+Full HyperDG (alpha_var=0.2),vlcs,0,1,64.1509
+Full HyperDG (alpha_var=0.2),vlcs,0,2,72.1037
+Full HyperDG (alpha_var=0.2),vlcs,0,3,74.0741
+Full HyperDG (alpha_var=0.2),vlcs,1,0,96.4664
+Full HyperDG (alpha_var=0.2),vlcs,1,1,63.3962
+Full HyperDG (alpha_var=0.2),vlcs,1,2,65.7012
+Full HyperDG (alpha_var=0.2),vlcs,1,3,71.7037
+Full HyperDG (alpha_var=0.2),vlcs,2,0,97.1731
+Full HyperDG (alpha_var=0.2),vlcs,2,1,58.3019
+Full HyperDG (alpha_var=0.2),vlcs,2,2,70.7317
+Full HyperDG (alpha_var=0.2),vlcs,2,3,73.1852
+Full HyperDG (alpha_var=0.2),vlcs,3,0,98.2332
+Full HyperDG (alpha_var=0.2),vlcs,3,1,60.7547
+Full HyperDG (alpha_var=0.2),vlcs,3,2,73.1707
+Full HyperDG (alpha_var=0.2),vlcs,3,3,68.7407
+Curvature frozen (no learning),terraincognita,0,0,55.6923
+Curvature frozen (no learning),terraincognita,0,1,37.2760
+Curvature frozen (no learning),terraincognita,0,2,51.2438
+Curvature frozen (no learning),terraincognita,0,3,41.7484
+Curvature frozen (no learning),terraincognita,1,0,46.6667
+Curvature frozen (no learning),terraincognita,1,1,42.7547
+Curvature frozen (no learning),terraincognita,1,2,49.7512
+Curvature frozen (no learning),terraincognita,1,3,32.2712
+Curvature frozen (no learning),terraincognita,2,0,50.2564
+Curvature frozen (no learning),terraincognita,2,1,40.9114
+Curvature frozen (no learning),terraincognita,2,2,50.0000
+Curvature frozen (no learning),terraincognita,2,3,36.5196
+Curvature frozen (no learning),terraincognita,3,0,49.2308
+Curvature frozen (no learning),terraincognita,3,1,41.2698
+Curvature frozen (no learning),terraincognita,3,2,47.8856
+Curvature frozen (no learning),terraincognita,3,3,35.3758
+Curvature frozen (no learning),officehome,0,0,59.5876
+Curvature frozen (no learning),officehome,0,1,52.9210
+Curvature frozen (no learning),officehome,0,2,74.7463
+Curvature frozen (no learning),officehome,0,3,75.3157
+Curvature frozen (no learning),officehome,1,0,58.5567
+Curvature frozen (no learning),officehome,1,1,50.4009
+Curvature frozen (no learning),officehome,1,2,75.9865
+Curvature frozen (no learning),officehome,1,3,75.3157
+Curvature frozen (no learning),officehome,2,0,60.4124
+Curvature frozen (no learning),officehome,2,1,56.5865
+Curvature frozen (no learning),officehome,2,2,74.7463
+Curvature frozen (no learning),officehome,2,3,74.9713
+Curvature frozen (no learning),officehome,3,0,60.6186
+Curvature frozen (no learning),officehome,3,1,56.8156
+Curvature frozen (no learning),officehome,3,2,74.8591
+Curvature frozen (no learning),officehome,3,3,76.2342
+Curvature frozen (no learning),pacs,0,0,82.8851
+Curvature frozen (no learning),pacs,0,1,81.1966
+Curvature frozen (no learning),pacs,0,2,96.4072
+Curvature frozen (no learning),pacs,0,3,80.6369
+Curvature frozen (no learning),pacs,1,0,85.3301
+Curvature frozen (no learning),pacs,1,1,78.8462
+Curvature frozen (no learning),pacs,1,2,95.5090
+Curvature frozen (no learning),pacs,1,3,82.1656
+Curvature frozen (no learning),pacs,2,0,85.8191
+Curvature frozen (no learning),pacs,2,1,77.3504
+Curvature frozen (no learning),pacs,2,2,95.5090
+Curvature frozen (no learning),pacs,2,3,77.7070
+Curvature frozen (no learning),pacs,3,0,86.5526
+Curvature frozen (no learning),pacs,3,1,73.7179
+Curvature frozen (no learning),pacs,3,2,95.8084
+Curvature frozen (no learning),pacs,3,3,79.2357
+Curvature frozen (no learning),vlcs,0,0,97.8799
+Curvature frozen (no learning),vlcs,0,1,63.5849
+Curvature frozen (no learning),vlcs,0,2,70.5793
+Curvature frozen (no learning),vlcs,0,3,75.7037
+Curvature frozen (no learning),vlcs,1,0,96.4664
+Curvature frozen (no learning),vlcs,1,1,62.0755
+Curvature frozen (no learning),vlcs,1,2,68.4451
+Curvature frozen (no learning),vlcs,1,3,73.9259
+Curvature frozen (no learning),vlcs,2,0,97.1731
+Curvature frozen (no learning),vlcs,2,1,61.8868
+Curvature frozen (no learning),vlcs,2,2,72.8659
+Curvature frozen (no learning),vlcs,2,3,75.4074
+Curvature frozen (no learning),vlcs,3,0,96.1131
+Curvature frozen (no learning),vlcs,3,1,62.4528
+Curvature frozen (no learning),vlcs,3,2,72.8659
+Curvature frozen (no learning),vlcs,3,3,72.8889
+No variance reg (alpha_var=0),terraincognita,0,0,48.7179
+No variance reg (alpha_var=0),terraincognita,0,1,41.2698
+No variance reg (alpha_var=0),terraincognita,0,2,42.9104
+No variance reg (alpha_var=0),terraincognita,0,3,44.4444
+No variance reg (alpha_var=0),terraincognita,1,0,53.3333
+No variance reg (alpha_var=0),terraincognita,1,1,47.7215
+No variance reg (alpha_var=0),terraincognita,1,2,43.6567
+No variance reg (alpha_var=0),terraincognita,1,3,32.6797
+No variance reg (alpha_var=0),terraincognita,2,0,40.7179
+No variance reg (alpha_var=0),terraincognita,2,1,44.5469
+No variance reg (alpha_var=0),terraincognita,2,2,47.3881
+No variance reg (alpha_var=0),terraincognita,2,3,37.5000
+No variance reg (alpha_var=0),terraincognita,3,0,59.7949
+No variance reg (alpha_var=0),terraincognita,3,1,34.1014
+No variance reg (alpha_var=0),terraincognita,3,2,46.2687
+No variance reg (alpha_var=0),terraincognita,3,3,37.3366
+No variance reg (alpha_var=0),officehome,0,0,58.7629
+No variance reg (alpha_var=0),officehome,0,1,53.8373
+No variance reg (alpha_var=0),officehome,0,2,75.8737
+No variance reg (alpha_var=0),officehome,0,3,74.0528
+No variance reg (alpha_var=0),officehome,1,0,59.1753
+No variance reg (alpha_var=0),officehome,1,1,54.1810
+No variance reg (alpha_var=0),officehome,1,2,77.0011
+No variance reg (alpha_var=0),officehome,1,3,74.3972
+No variance reg (alpha_var=0),officehome,2,0,62.2680
+No variance reg (alpha_var=0),officehome,2,1,53.4937
+No variance reg (alpha_var=0),officehome,2,2,73.6189
+No variance reg (alpha_var=0),officehome,2,3,77.2675
+No variance reg (alpha_var=0),officehome,3,0,59.3814
+No variance reg (alpha_var=0),officehome,3,1,54.1810
+No variance reg (alpha_var=0),officehome,3,2,73.1680
+No variance reg (alpha_var=0),officehome,3,3,75.7750
+No variance reg (alpha_var=0),pacs,0,0,84.5966
+No variance reg (alpha_var=0),pacs,0,1,78.8462
+No variance reg (alpha_var=0),pacs,0,2,94.9102
+No variance reg (alpha_var=0),pacs,0,3,76.4331
+No variance reg (alpha_var=0),pacs,1,0,84.5966
+No variance reg (alpha_var=0),pacs,1,1,77.7778
+No variance reg (alpha_var=0),pacs,1,2,94.9102
+No variance reg (alpha_var=0),pacs,1,3,83.9490
+No variance reg (alpha_var=0),pacs,2,0,85.3301
+No variance reg (alpha_var=0),pacs,2,1,77.7778
+No variance reg (alpha_var=0),pacs,2,2,95.5090
+No variance reg (alpha_var=0),pacs,2,3,78.2166
+No variance reg (alpha_var=0),pacs,3,0,85.5746
+No variance reg (alpha_var=0),pacs,3,1,79.9145
+No variance reg (alpha_var=0),pacs,3,2,94.9102
+No variance reg (alpha_var=0),pacs,3,3,79.8726
+No variance reg (alpha_var=0),vlcs,0,0,97.8799
+No variance reg (alpha_var=0),vlcs,0,1,59.6226
+No variance reg (alpha_var=0),vlcs,0,2,71.1890
+No variance reg (alpha_var=0),vlcs,0,3,72.7407
+No variance reg (alpha_var=0),vlcs,1,0,99.2933
+No variance reg (alpha_var=0),vlcs,1,1,64.5283
+No variance reg (alpha_var=0),vlcs,1,2,67.5305
+No variance reg (alpha_var=0),vlcs,1,3,68.7407
+No variance reg (alpha_var=0),vlcs,2,0,96.4664
+No variance reg (alpha_var=0),vlcs,2,1,60.7547
+No variance reg (alpha_var=0),vlcs,2,2,72.2561
+No variance reg (alpha_var=0),vlcs,2,3,73.0370
+No variance reg (alpha_var=0),vlcs,3,0,96.4664
+No variance reg (alpha_var=0),vlcs,3,1,57.3585
+No variance reg (alpha_var=0),vlcs,3,2,71.7988
+No variance reg (alpha_var=0),vlcs,3,3,70.9630

@@ -23,3 +23,15 @@ data/
 # Legacy paper artifacts (removed from repo history moving forward)
 SFT_CVPR2025.pdf
 SFT_CVPR2025.txt
+
+# Local LaTeX backups (kept on disk, not in the repo)
+HyperDG_TMLR/*.backup_*
+HyperDG_TMLR/*.aux
+HyperDG_TMLR/*.bbl
+HyperDG_TMLR/*.blg
+HyperDG_TMLR/*.log
+HyperDG_TMLR/*.out
+HyperDG_TMLR/*.synctex.gz
+
+# Heavy intermediate artifacts that shouldn't propagate
+outputs/poincare_plots.zip

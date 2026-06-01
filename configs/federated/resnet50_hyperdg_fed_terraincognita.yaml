@@ -1,0 +1,29 @@
+experiment_name: hyperdg_fed_resnet50_terraincognita
+seed: 0
+output_dir: experiments/federated/hyperdg_resnet50_terraincognita
+device: cuda
+
+dataset:
+  config: configs/datasets/terraincognita.yaml
+
+algorithm: hyperdg_fed
+
+hparams:
+  lr: 5.0e-5
+  curvature_lr: 1.0e-4
+  weight_decay: 0.0
+  batch_size: 32
+  grad_clip_norm: 5.0
+  nonlinear_classifier: false
+  alpha_curv: 0.2
+  beta_align: 0.5
+  gamma_sharp: 0.05
+  delta_local_flat: 0.1
+  delta_global_flat: 0.1
+  curvature_epsilon: 1.0e-4
+
+federated:
+  num_rounds: 500
+  local_steps: 10
+  eval_freq: 10
+  clients_per_round: -1

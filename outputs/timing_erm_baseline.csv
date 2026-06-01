@@ -1,0 +1,4 @@
+algorithm,config,steps,ms_per_step,relative
+ERM,configs/training/resnet50_flatland_pacs.yaml,200,464.8127,1.0000
+SFT,configs/training/resnet50_sft_pacs.yaml,200,581.3971,1.2508
+HyperDG,configs/training/resnet50_hyperdg_pacs.yaml,200,458.6856,0.9868

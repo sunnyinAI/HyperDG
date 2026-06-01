@@ -77,23 +77,37 @@ def lorentz_to_poincare_2d(lorentz: np.ndarray) -> np.ndarray:
     return xi / (1.0 + x0)
 
 
-def tangent_to_poincare_disk(tangent: np.ndarray, curv: float = 1.0) -> np.ndarray:
+def tangent_to_poincare_disk(
+    tangent: np.ndarray,
+    curv: float = 1.0,
+    target_radius: float = 1.5,
+    radius_quantile: float = 0.98,
+) -> np.ndarray:
     """Full pipeline: high-d tangent features -> 2D Poincaré disk at K=1.
 
     Steps:
-      1. PCA to 2D  (linear dimensionality reduction)
-      2. L2-normalise each row to unit norm
-      3. Scale by 0.85 (keeps cosh(sqrt_c * 0.85) well-defined)
-      4. exp_map at K=curv
-      5. Stereographic projection -> Poincaré disk
+      1. PCA to 2D (linear, geometry-preserving).
+      2. Robust **global** scaling: divide all 2D vectors by the
+         ``radius_quantile`` of their norms, then multiply by
+         ``target_radius``. This preserves RELATIVE magnitudes — the key
+         radial signal on the Poincaré disk — instead of collapsing every
+         point to the same norm (previous bug).
+      3. exp_map at K=curv (Lorentz).
+      4. Stereographic projection -> Poincaré disk.
 
-    Returns (N, 2) with ||p|| < 1.
+    The combination ``target_radius=1.5`` with curv=1 maps the
+    quantile-norm point to disk radius ``tanh(0.75) ≈ 0.64``, leaving
+    headroom near the boundary for outliers. Tweak ``target_radius`` to
+    push class clusters closer to (or further from) the boundary.
     """
     pca = PCA(n_components=2, random_state=42)
     v2 = pca.fit_transform(tangent.astype(np.float32))
 
-    norms = np.linalg.norm(v2, axis=1, keepdims=True).clip(min=1e-8)
-    v2 = v2 / norms * 0.85          # unit-norm then scale to 0.85
+    norms = np.linalg.norm(v2, axis=1)
+    # Use a high quantile (not max) so a single outlier doesn't squash
+    # everything toward the origin.
+    scale_norm = max(np.quantile(norms, radius_quantile), 1e-8)
+    v2 = v2 / scale_norm * target_radius
 
     lorentz = exp_map_origin_2d(v2, curv=curv)
     return lorentz_to_poincare_2d(lorentz)
@@ -143,9 +157,19 @@ def extract_features(algorithm, loaders, curvatures, device, n_samples, num_sour
 
 # ── Plotting ───────────────────────────────────────────────────────────────────
 
-DOMAIN_COLORS = ["#4C72B0", "#C44E52", "#55A868", "#8172B3",
-                 "#CCB974", "#64B5CD", "#E07B39", "#6BAED6"]
 CLASS_MARKERS  = ["o", "s", "^", "D", "v", "P", "*", "X"]
+
+
+def _class_palette(n_classes: int):
+    """Use a perceptually uniform palette (tab10/tab20/turbo by class count)."""
+    if n_classes <= 10:
+        cmap = plt.get_cmap("tab10")
+        return [cmap(i % 10) for i in range(n_classes)]
+    if n_classes <= 20:
+        cmap = plt.get_cmap("tab20")
+        return [cmap(i % 20) for i in range(n_classes)]
+    cmap = plt.get_cmap("turbo")
+    return [cmap(i / max(n_classes - 1, 1)) for i in range(n_classes)]
 
 
 def plot_poincare_disk(domain_data: dict, out_path: Path, title: str = ""):
@@ -156,6 +180,7 @@ def plot_poincare_disk(domain_data: dict, out_path: Path, title: str = ""):
         axes = [axes]
 
     all_classes = sorted({int(l) for d in domain_data.values() for l in d["labels"]})
+    class_to_color = dict(zip(all_classes, _class_palette(len(all_classes))))
 
     for ax, dom_name in zip(axes, domain_names):
         data   = domain_data[dom_name]
@@ -177,10 +202,18 @@ def plot_poincare_disk(domain_data: dict, out_path: Path, title: str = ""):
                 continue
             ax.scatter(
                 coords[mask, 0], coords[mask, 1],
-                c=DOMAIN_COLORS[cls_idx % len(DOMAIN_COLORS)],
+                color=class_to_color[cls],
                 marker=CLASS_MARKERS[cls_idx % len(CLASS_MARKERS)],
-                s=22, alpha=0.75, linewidths=0,
+                s=22, alpha=0.78, linewidths=0.3, edgecolor="white",
             )
+
+            # Class centroid on the disk — small ring marker so the
+            # cluster centre is visible even when points are dense.
+            cx, cy = coords[mask].mean(axis=0)
+            ax.scatter([cx], [cy],
+                       facecolor="none",
+                       edgecolor=class_to_color[cls],
+                       s=140, linewidths=1.4)
 
         ax.set_xlim(-1.12, 1.12)
         ax.set_ylim(-1.12, 1.12)
@@ -189,12 +222,11 @@ def plot_poincare_disk(domain_data: dict, out_path: Path, title: str = ""):
         ax.set_title(f"{dom_name}\nlearnt K={curv:.4f}", fontsize=9)
 
     handles = [
-        mpatches.Patch(color=DOMAIN_COLORS[i % len(DOMAIN_COLORS)],
-                       label=f"class {c}")
-        for i, c in enumerate(all_classes[:8])
+        mpatches.Patch(color=class_to_color[c], label=f"class {c}")
+        for c in all_classes[:12]
     ]
     fig.legend(handles=handles, loc="lower center",
-               ncol=min(len(all_classes), 8), fontsize=7,
+               ncol=min(len(handles), 12), fontsize=7,
                frameon=False, bbox_to_anchor=(0.5, -0.02))
     fig.suptitle(title or "Poincaré disk: per-domain feature distributions",
                  fontsize=11, y=1.02)
