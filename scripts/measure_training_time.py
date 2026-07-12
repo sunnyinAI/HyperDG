@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Measure and compare wall-clock training time across algorithms.
 
-Addresses reviewer request: "Report training time compared to baselines.
-Hyperbolic operations (log/exp maps) add overhead; is the gain worth the cost?"
+Addresses the reviewer request to quantify training cost against a genuine ERM
+baseline. The benchmark also records peak PyTorch-allocated device memory.
 
 The script runs a fixed number of update steps for each specified algorithm
 config, records wall-clock seconds per step, and prints a comparison table.
@@ -10,18 +10,20 @@ config, records wall-clock seconds per step, and prints a comparison table.
 Usage:
     python scripts/measure_training_time.py \
         --configs \
+            configs/training/resnet50_erm_pacs.yaml \
             configs/training/resnet50_hyperdg_pacs.yaml \
             configs/training/resnet50_sft_pacs.yaml \
-        --labels HyperDG SFT \
+        --labels ERM HyperDG SFT \
+        --baseline-label ERM \
         --warmup 20 \
         --steps 200 \
         --device cuda
 
 Output (example):
-    Algorithm    Steps    Time/step (ms)    Relative
-    ---------    -----    --------------    --------
-    SFT          200      42.1              1.00x
-    HyperDG      200      61.3              1.46x
+    Algorithm    Steps    Time/step (ms)    Peak MiB    Relative
+    ---------    -----    --------------    --------    --------
+    ERM          200      42.1              8200        1.00x
+    HyperDG      200      50.0              8300        1.19x
 """
 
 from __future__ import annotations
@@ -89,6 +91,12 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="Optional path to write a CSV summary (e.g. outputs/timing.csv).",
+    )
+    parser.add_argument(
+        "--baseline-label",
+        type=str,
+        default=None,
+        help="Label used to normalize relative cost (defaults to the first result).",
     )
     return parser.parse_args()
 
@@ -163,6 +171,7 @@ def time_algorithm(
         algorithm.update(minibatches)
 
     if device.type == "cuda":
+        torch.cuda.reset_peak_memory_stats(device)
         torch.cuda.synchronize()
 
     start = time.perf_counter()
@@ -174,25 +183,41 @@ def time_algorithm(
     elapsed = time.perf_counter() - start
 
     ms_per_step = elapsed / steps * 1000.0
+    peak_memory_mb = (
+        torch.cuda.max_memory_allocated(device) / (1024 ** 2)
+        if device.type == "cuda"
+        else 0.0
+    )
     return {
         "label": label,
         "config": cfg_path,
         "steps": steps,
         "total_s": elapsed,
         "ms_per_step": ms_per_step,
+        "peak_memory_mb": peak_memory_mb,
     }
 
 
-def print_table(results: List[Dict[str, Any]]) -> None:
+def baseline_time(results: List[Dict[str, Any]], baseline_label: str | None) -> float:
+    if baseline_label is not None:
+        for result in results:
+            if result["label"] == baseline_label:
+                return float(result["ms_per_step"])
+        raise ValueError(f"Baseline label '{baseline_label}' was not measured.")
+    return float(results[0]["ms_per_step"])
+
+
+def print_table(results: List[Dict[str, Any]], baseline_label: str | None) -> None:
     if not results:
         return
-    baseline_ms = results[0]["ms_per_step"]
-    col_w = [max(len(r["label"]) for r in results) + 2, 8, 18, 12]
+    baseline_ms = baseline_time(results, baseline_label)
+    col_w = [max(len(r["label"]) for r in results) + 2, 8, 18, 14, 12]
     header = (
         f"{'Algorithm':<{col_w[0]}}"
         f"{'Steps':>{col_w[1]}}"
         f"{'ms / step':>{col_w[2]}}"
-        f"{'Relative':>{col_w[3]}}"
+        f"{'Peak MiB':>{col_w[3]}}"
+        f"{'Relative':>{col_w[4]}}"
     )
     sep = "-" * len(header)
     print("\n" + sep)
@@ -204,7 +229,8 @@ def print_table(results: List[Dict[str, Any]]) -> None:
             f"{r['label']:<{col_w[0]}}"
             f"{r['steps']:>{col_w[1]}}"
             f"{r['ms_per_step']:>{col_w[2]}.2f}"
-            f"{rel:>{col_w[3]}.2f}x"
+            f"{r['peak_memory_mb']:>{col_w[3]}.1f}"
+            f"{rel:>{col_w[4]}.2f}x"
         )
     print(sep + "\n")
 
@@ -233,17 +259,18 @@ def main() -> None:
         except Exception as exc:
             print(f"  [ERROR] {exc}")
 
-    print_table(results)
+    print_table(results, args.baseline_label)
 
     if args.output and results:
         out_path = Path(args.output)
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        baseline_ms = results[0]["ms_per_step"]
-        lines = ["algorithm,config,steps,ms_per_step,relative"]
+        baseline_ms = baseline_time(results, args.baseline_label)
+        lines = ["algorithm,config,steps,ms_per_step,peak_memory_mb,relative"]
         for r in results:
             rel = r["ms_per_step"] / baseline_ms
             lines.append(
-                f"{r['label']},{r['config']},{r['steps']},{r['ms_per_step']:.4f},{rel:.4f}"
+                f"{r['label']},{r['config']},{r['steps']},{r['ms_per_step']:.4f},"
+                f"{r['peak_memory_mb']:.2f},{rel:.4f}"
             )
         out_path.write_text("\n".join(lines) + "\n")
         print(f"CSV saved to {out_path}")

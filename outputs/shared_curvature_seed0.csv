@@ -1,0 +1,5 @@
+dataset,n_splits,included_splits,per_domain_mean,per_domain_std,shared_mean,shared_std,shared_minus_per_domain
+pacs,4,0;1;2;3,84.7573,7.5484,85.2856,5.2287,0.5283
+vlcs,4,0;1;2;3,77.4938,15.3789,76.2126,16.2401,-1.2812
+officehome,4,0;1;2;3,66.7334,10.3388,65.4986,10.1069,-1.2348
+terraincognita,3,0;2;3,44.9403,5.5252,41.7411,1.5532,-3.1991

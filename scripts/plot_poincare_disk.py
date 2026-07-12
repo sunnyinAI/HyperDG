@@ -4,14 +4,15 @@
 Approach (matches reviewer hQnG's explicit request):
   1. Extract backbone features for a subset of samples per domain.
   2. Apply the learnt per-domain tangent embedding (feats / sqrt(K_i)).
-  3. Reduce high-d tangent vectors to 2D via PCA (linear, geometry-preserving).
-  4. L2-normalise to unit norm, scale to 0.85 to stay in stable cosh range.
+  3. Reduce high-d tangent vectors to 2D via a separately fitted PCA per panel.
+  4. Apply robust global radial scaling within that panel.
   5. Map 2D tangent vectors to Lorentz coords via exp_map at fixed K=1 (curvature=-1).
   6. Apply stereographic projection (Lorentz -> Poincaré disk).
   7. Plot each domain as a separate panel on the Poincaré disk.
 
-This gives a *direct* Poincaré disk representation at fixed K=1 (no UMAP),
-matching the standard approach in hyperbolic learning papers cited by the reviewer.
+This is a post-hoc qualitative projection at fixed K=-1. Because PCA and
+radial scaling are fitted independently per panel, coordinates and radial
+depths must not be compared across panels.
 
 Usage:
   python scripts/plot_poincare_disk.py \
@@ -86,7 +87,7 @@ def tangent_to_poincare_disk(
     """Full pipeline: high-d tangent features -> 2D Poincaré disk at K=1.
 
     Steps:
-      1. PCA to 2D (linear, geometry-preserving).
+      1. PCA to 2D (linear dimensionality reduction).
       2. Robust **global** scaling: divide all 2D vectors by the
          ``radius_quantile`` of their norms, then multiply by
          ``target_radius``. This preserves RELATIVE magnitudes — the key

@@ -1,315 +1,512 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Supplementary Material (TMLR / OpenReview)
-% HyperDG: Hyperbolic Representation Alignment for Robust Domain Generalization
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[10pt]{article}
 
-\documentclass[11pt]{article}
-
-% ---------------- Packages ----------------
-\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[a4paper,margin=0.85in]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{float}
-\usepackage{multirow}
-\usepackage{array}
 \usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{multirow}
 \usepackage{xcolor}
-\usepackage{enumitem}
 
-\hypersetup{
-colorlinks=true,
-linkcolor=blue,
-citecolor=blue,
-urlcolor=blue
-}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 
-\title{\textbf{Supplementary Material}\\[4pt]
-HyperDG: Does Per-Domain Hyperbolic Curvature Help Domain Generalization?\\
-A Controlled Test on a Pretrained Backbone}
-
-\author{Sunny Gupta \and Amit Sethi}
-
+\title{Supplementary Material\\
+\large Do Domain-Specific Curvature Scales Improve Domain Generalization?\\
+A Controlled Re-evaluation of HyperDG}
+\author{Anonymous Authors}
 \date{}
+
+\newcommand{\method}{\textsc{HyperDG}}
+\newcommand{\control}{\textsc{ZeroPenalty}}
+\newcommand{\pp}{\,pp}
 
 \begin{document}
 \maketitle
-\vspace{-1em}
+\vspace{-1.5em}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Overview}
+\section{Supplementary Scope and Evidence Status}
+\label{sec:scope}
 
-This supplementary document accompanies the revised submission and contains additional visualizations, expanded ablations, and implementation details requested during review. In particular, we include:
+This supplement separates confirmatory evidence from exploratory or incomplete
+analyses. This distinction is necessary because the repository contains more
+artifacts than can support final claims.
 
-\begin{itemize}[leftmargin=1.5em]
-\item Per-dataset per-domain curvature trajectories with and without the
-      variance regularizer ($\lambda_{\mathrm{var}}{=}0$ vs.\ $0.2$).
-\item Class-prototype Poincar\'e disk visualizations across all
-      datasets and conditions.
-\item Single-shared-curvature vs.\ per-domain-curvature accuracy
-      comparison (single-seed; corrected from earlier draft).
-\item MERU backbone Poincar\'e visualizations.
-\item Runtime cost and implementation notes.
+\begin{table}[H]
+\centering
+\caption{Evidence inventory at the time of this revision. ``Complete'' means
+that all planned configurations reached their configured final step and wrote a
+checkpoint. ``Usable'' additionally requires a controlled comparison.}
+\label{tab:evidence-status}
+\begin{tabular}{p{0.31\linewidth}p{0.16\linewidth}p{0.45\linewidth}}
+\toprule
+Analysis & Status & Use in paper \\
+\midrule
+Four-condition controlled study & Complete: 256/256 & Primary evidence; four seeds and four splits on four datasets. \\
+Component and variance diagnostics & Complete: 36/36 & Exploratory seed-0 evidence; not used for population-level claims. \\
+Curvature trajectories & Complete & Mechanistic diagnostic on all four controlled datasets. \\
+Single shared curvature & Partial: 15/16 on four controlled datasets & Seed-0 diagnostic only; TerraIncognita split 1 is excluded. \\
+Poincare projections & Generated & Qualitative post-hoc projections; not evidence of end-to-end hyperbolic training. \\
+Runtime benchmark & Repeated & Reported as an implementation-cost diagnostic, separate from accuracy runs. \\
+MERU comparison & Incomplete & Excluded from accuracy conclusions; four runs lack final checkpoints. \\
+Camelyon17 & HyperDG only & Descriptive custom leave-one-hospital-out result; no matched baseline. \\
+$\lambda_{\mathrm{align}}$/proxy sweep & Confounded & Excluded: available configurations change multiple weights and cover one seed/split. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The primary controlled study is therefore complete. The direct shared-curvature
+comparison, true SAM comparison, cross-dataset one-factor hyperparameter study,
+controlled MERU study, and controlled WILDS study are not complete. We do not
+present these as solved reviewer requests.
+
+\section{Expanded Primary Results}
+\label{sec:primary}
+
+\subsection{Run inventory}
+
+The controlled batches contain 292 completed runs:
+\begin{itemize}
+    \item 256 primary runs: four conditions $\times$ four datasets $\times$
+          four seeds $\times$ four held-out domains;
+    \item 24 seed-0 leave-one-component-out runs: three dropped components
+          $\times$ two datasets $\times$ four held-out domains;
+    \item 12 seed-0 PACS variance-weight runs: three additional weights
+          $\times$ four held-out domains.
 \end{itemize}
+Every one of these configurations reaches its expected final step and has a
+final checkpoint in the local experiment archive. The public git tree contains
+all 292 configurations and the primary per-run CSV, but not the raw
+\texttt{experiments/} directory. The manuscript consequently claims release of
+configurations and aggregate per-run results, not release of every checkpoint.
 
-\section{Per-dataset curvature trajectories}
+\subsection{All paired effects}
 
-Figures~\ref{fig:supp_traj_pacs}--\ref{fig:supp_traj_terra} show, per
-dataset, the trajectory of each per-domain curvature parameter $K_i$
-during training, under $\lambda_{\mathrm{var}}{=}0$ (left) and the default
-$\lambda_{\mathrm{var}}{=}0.2$ (right). Each panel contains 4 leave-one-out
-splits $\times$ 3 training domains $=$ 12 trajectories. The dashed
-horizontal marks the initialization $K_{\mathrm{init}} \approx 0.6932$.
-The key observation is that the left and right panels are visually almost
-indistinguishable on every dataset: gradient dynamics alone are sufficient
-to keep per-domain curvatures within a narrow band.
+Table~\ref{tab:all-effects} expands the forest plot in the main paper. Accuracy
+differences are variant minus \control, paired on seed and held-out domain.
+Confidence intervals are unadjusted; p-values are shown both raw and after Holm
+correction over all 12 comparisons.
+
+\begin{table}[H]
+\centering
+\caption{All planned paired comparisons ($n=16$ each). No comparison remains
+significant after family-wise error correction.}
+\label{tab:all-effects}
+\begin{tabular}{llrrrr}
+\toprule
+Variant & Dataset & $\Delta$ (pp) & 95\% CI & Raw $p$ & Holm $p$ \\
+\midrule
+Full & PACS           & $+0.454$ & $[-1.065,\ 1.973]$ & .534 & 1.000 \\
+Full & VLCS           & $-0.154$ & $[-1.033,\ 0.724]$ & .713 & 1.000 \\
+Full & OfficeHome     & $-1.022$ & $[-1.794,-0.251]$  & .013 & .153 \\
+Full & TerraIncognita & $-0.733$ & $[-3.921,\ 2.455]$ & .631 & 1.000 \\
+\midrule
+Frozen & PACS           & $+0.626$ & $[-0.620,\ 1.872]$ & .301 & 1.000 \\
+Frozen & VLCS           & $+0.644$ & $[-0.471,\ 1.759]$ & .237 & 1.000 \\
+Frozen & OfficeHome     & $-0.924$ & $[-1.682,-0.167]$  & .020 & .200 \\
+Frozen & TerraIncognita & $+0.404$ & $[-2.682,\ 3.491]$ & .784 & 1.000 \\
+\midrule
+No variance & PACS           & $+0.529$ & $[-0.837,\ 1.894]$ & .422 & 1.000 \\
+No variance & VLCS           & $-0.586$ & $[-1.876,\ 0.704]$ & .348 & 1.000 \\
+No variance & OfficeHome     & $-1.027$ & $[-1.841,-0.213]$  & .017 & .185 \\
+No variance & TerraIncognita & $+0.000$ & $[-3.726,\ 3.727]$ & 1.000 & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The TerraIncognita/no-variance result is effectively zero
+($+0.00036\pp$, raw $p=.99985$). This value is computed with
+\texttt{scipy.stats.ttest\_rel}; the earlier custom incomplete-beta
+implementation produced an erroneous $p=.0206$ and has been removed.
+
+\section{Curvature Dynamics}
+\label{sec:trajectories}
+
+Each figure compares $\lambda_{\mathrm{var}}=0$ (left) with the default
+$\lambda_{\mathrm{var}}=0.2$ (right). Each panel contains 12 curves: four
+held-out-domain splits times three source-domain parameters. The curves are
+positive curvature magnitudes $c_i=\operatorname{softplus}(a_i)+10^{-4}$, not
+negative sectional-curvature values. Logged indices refer to source-loader
+slots; because the held-out domain changes, the same index need not denote the
+same named domain in every split.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.88\linewidth]{fig_curvature_trajectories_pacs.pdf}
-\caption{PACS curvature trajectories.}
-\label{fig:supp_traj_pacs}
+\includegraphics[width=0.86\linewidth]{fig_curvature_trajectories_pacs.pdf}
+\caption{PACS curvature-scale trajectories.}
+\label{fig:traj-pacs}
 \end{figure}
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.88\linewidth]{fig_curvature_trajectories_vlcs.pdf}
-\caption{VLCS curvature trajectories.}
-\label{fig:supp_traj_vlcs}
-\end{figure}
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.88\linewidth]{fig_curvature_trajectories_officehome.pdf}
-\caption{OfficeHome curvature trajectories.}
-\label{fig:supp_traj_oh}
-\end{figure}
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.88\linewidth]{fig_curvature_trajectories_terra.pdf}
-\caption{TerraIncognita curvature trajectories.}
-\label{fig:supp_traj_terra}
+\includegraphics[width=0.86\linewidth]{fig_curvature_trajectories_vlcs.pdf}
+\caption{VLCS curvature-scale trajectories.}
+\label{fig:traj-vlcs}
 \end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Poincar\'e Disk Visualizations}
-
-We project learned Lorentz embeddings into the Poincar\'e disk using:
-
-\begin{enumerate}[leftmargin=1.5em]
-\item Tangent-space extraction,
-\item PCA reduction to 2D,
-\item Exponential map with fixed curvature $K=-1$,
-\item Stereographic projection.
-\end{enumerate}
-
-These figures qualitatively illustrate the geometric structure learned by HyperDG.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{HyperDG (Per-Domain Curvature)}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\linewidth]{fig_curvature_trajectories_officehome.pdf}
+\caption{OfficeHome curvature-scale trajectories.}
+\label{fig:traj-officehome}
+\end{figure}
 
 \begin{figure}[H]
 \centering
+\includegraphics[width=0.86\linewidth]{fig_curvature_trajectories_terra.pdf}
+\caption{TerraIncognita curvature-scale trajectories.}
+\label{fig:traj-terra}
+\end{figure}
 
+The visual conclusion is descriptive but consistent across datasets: the
+parameters follow similar paths with or without the explicit variance penalty.
+No class-hierarchy metadata are available for these four benchmarks, so we do
+not claim a correlation between curvature and hierarchy depth.
+
+\section{Direct Shared-Curvature Diagnostic}
+\label{sec:shared}
+
+Table~\ref{tab:shared} compares learned per-domain scales with one learned shared
+scale. All configurations are seed 0. PACS, VLCS, and OfficeHome have four
+complete held-out-domain runs. TerraIncognita has three: shared-curvature split
+1 stopped at step 2,600 of 5,000 and wrote no final checkpoint, so it is
+excluded. DomainNet is also excluded because the available per-domain and
+shared runs use different step budgets and are not a controlled pair.
+
+\begin{table}[H]
+\centering
+\caption{Seed-0 shared-curvature diagnostic. $\Delta$ is shared minus
+per-domain. Standard deviations are across held-out domains, not random seeds.}
+\label{tab:shared}
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & Splits & Per-domain & Shared & $\Delta$ (pp) \\
+\midrule
+PACS           & 4 & $84.76\pm7.55$  & $85.29\pm5.23$  & $+0.53$ \\
+VLCS           & 4 & $77.49\pm15.38$ & $76.21\pm16.24$ & $-1.28$ \\
+OfficeHome     & 4 & $66.73\pm10.34$ & $65.50\pm10.11$ & $-1.23$ \\
+TerraIncognita & 3 & $44.94\pm5.53$  & $41.74\pm1.55$  & $-3.20$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These data do not justify equivalence: they use one seed, and TerraIncognita is
+incomplete. They motivate, but do not replace, a multi-seed shared-curvature
+condition matched to the primary grid.
+
+\section{Component Diagnostics}
+\label{sec:components}
+
+\subsection{Leave-one-component-out analysis}
+
+\begin{table}[H]
+\centering
+\caption{Seed-0 leave-one-component-out accuracy (mean $\pm$ sample SD over
+four held-out domains). Legacy ``sharpness'' is named norm proxy here because it
+computes feature-norm variance rather than a SAM perturbation.}
+\label{tab:loo}
+\begin{tabular}{lrr}
+\toprule
+Condition & PACS & OfficeHome \\
+\midrule
+Full objective             & $84.76\pm7.55$ & $66.73\pm10.34$ \\
+Drop domain-mean alignment & $84.80\pm7.91$ & $68.14\pm9.70$ \\
+Drop norm proxy            & $87.06\pm7.02$ & $66.14\pm10.90$ \\
+Drop local/global terms    & $84.25\pm8.17$ & $66.70\pm11.81$ \\
+Drop curvature variance    & $83.70\pm8.22$ & $65.63\pm10.99$ \\
+Freeze curvature           & $85.28\pm7.48$ & $65.64\pm11.18$ \\
+\control{}                   & $84.09\pm6.87$ & $67.25\pm12.02$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The apparent $+2.30\pp$ PACS change after removing the norm proxy does not
+replicate as a consistent OfficeHome effect and is within the large
+held-out-domain dispersion. These are exploratory comparisons without
+multiplicity-adjusted inference.
+
+\subsection{Proxy-term decomposition on OfficeHome}
+
+The original reviewer request asked for SAM alone versus curvature refinement.
+The released \method{} code does not execute SAM. The available 16-run schedule
+instead toggles the norm-dispersion and local/global proxy terms. We relabel the
+conditions accordingly in Table~\ref{tab:proxy}; calling them SAM would be
+incorrect.
+
+\begin{table}[H]
+\centering
+\caption{OfficeHome proxy decomposition (seed 0). Each split holds out the
+corresponding OfficeHome domain.}
+\label{tab:proxy}
+\begin{tabular}{lrrrrr}
+\toprule
+Condition & Split 0 & Split 1 & Split 2 & Split 3 & Mean $\pm$ SD \\
+\midrule
+\control{}                 & 63.71 & 54.87 & 75.20 & 76.58 & $67.59\pm10.26$ \\
+Proxy terms only         & 59.79 & 49.94 & 75.54 & 79.10 & $66.09\pm13.65$ \\
+Curvature/alignment only & 62.89 & 50.29 & 75.87 & 76.23 & $66.32\pm12.36$ \\
+Full objective           & 59.79 & 50.86 & 74.52 & 77.73 & $65.73\pm12.62$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A genuine response to the SAM concern still requires a standard SAM
+implementation under the same backbone, splits, seeds, and update budget.
+
+\subsection{Variance-weight sweep}
+
+\begin{table}[H]
+\centering
+\caption{PACS seed-0 sweep of the curvature-variance coefficient. Means and
+sample SDs are across four held-out domains.}
+\label{tab:variance-sweep}
+\begin{tabular}{rr}
+\toprule
+$\lambda_{\mathrm{var}}$ & Accuracy (\%) \\
+\midrule
+0.00 & $83.70\pm8.22$ \\
+0.05 & $83.78\pm9.10$ \\
+0.20 & $84.76\pm7.55$ \\
+0.50 & $85.92\pm6.09$ \\
+2.00 & $86.09\pm7.63$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The table is compatible with a modest effect but is too low-powered to
+establish stability: it has one seed, and standard deviations across held-out
+domains exceed differences between means. The existing $\lambda_{\mathrm{align}}$
+and legacy feedback/proxy configurations vary several coefficients
+simultaneously and are therefore not reported as one-factor sensitivity curves.
+
+\section{Runtime and Memory}
+\label{sec:runtime}
+
+Runtime uses a genuine DomainBed ERM configuration, not the curvature-based
+\texttt{flatland} configuration previously mislabeled as ERM. Each repeat uses
+20 warm-up and 200 timed updates on an RTX 6000 Ada, with CUDA synchronization.
+Method order is rotated across repeats. Peak memory is allocated PyTorch memory,
+not total device residency.
+
+\begin{table}[H]
+\centering
+\caption{Repeated PACS training-step benchmark (five repeats). Relative cost
+is computed against ERM within each repeat and then averaged.}
+\label{tab:runtime}
+\begin{tabular}{lrrr}
+\toprule
+Method & ms/step & Peak allocated MiB & Relative to ERM \\
+\midrule
+ERM     & $456.16\pm26.89$ & $8323.9\pm3.7$  & $1.000\pm0.000$ \\
+HyperDG & $464.27\pm8.04$  & $8292.6\pm12.8$ & $1.020\pm0.060$ \\
+SFT     & $583.67\pm4.39$  & $3086.1\pm4.8$  & $1.283\pm0.068$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+HyperDG is $8.11$ ms/step slower than ERM on the mean, corresponding to a
+$2.0\%$ average relative overhead with a $6.0\%$ repeat-to-repeat SD. Peak
+allocated memory is similar for HyperDG and ERM in this benchmark. Thus, the
+implementation does not impose a large runtime penalty, but the controlled
+accuracy study also provides no detected gain with which to offset that cost.
+
+The benchmark measures implementation cost, not end-to-end time including
+periodic evaluation or checkpoint I/O. Data-loader workers are disabled to
+reduce host-side variance.
+
+\section{Post-hoc Poincar\'e Projections}
+\label{sec:poincare}
+
+These plots respond to the request for Poincare-disk visualizations, but their
+interpretation is deliberately limited. For each panel, the plotting script
+extracts encoder features, divides by the learned scale, fits a separate 2-D
+PCA, applies robust radial scaling, maps through a fixed-curvature ($K=-1$)
+exponential map, and stereographically projects to the disk. Because PCA and
+radial scaling are fitted separately per panel, axes and radial depths are not
+comparable across panels. The plots show within-panel class organization only;
+they do not demonstrate learned manifold hierarchy or end-to-end Lorentz
+training.
+
+\begin{figure}[H]
+\centering
 \begin{subfigure}{0.48\textwidth}
-\centering
 \includegraphics[width=\linewidth]{poincare_hyperdg_pacs_perdomain.pdf}
-\caption{PACS}
-\end{subfigure}
-\hfill
+\caption{HyperDG, per-domain scale}
+\end{subfigure}\hfill
 \begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_hyperdg_vlcs_perdomain.pdf}
-\caption{VLCS}
-\end{subfigure}
-
-\vspace{0.5em}
-
-\begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_hyperdg_officehome_perdomain.pdf}
-\caption{OfficeHome}
-\end{subfigure}
-\hfill
-\begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_hyperdg_domainnet_perdomain.pdf}
-\caption{DomainNet}
-\end{subfigure}
-\begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_hyperdg_terra_perdomain.pdf}
-\caption{DomainNet}
-\end{subfigure}
-
-\caption{HyperDG using per-domain learnable curvatures. Distinct radial cluster depths indicate geometry specialization across domains.}
-\end{figure}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{HyperDG (Single Shared Curvature)}
-
-\begin{figure}[H]
-\centering
-
-\begin{subfigure}{0.48\textwidth}
-\centering
 \includegraphics[width=\linewidth]{poincare_hyperdg_pacs_singlecurv.pdf}
-\caption{PACS}
+\caption{HyperDG, shared scale}
 \end{subfigure}
-\hfill
 \begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_hyperdg_vlcs_singlecurv.pdf}
-\caption{VLCS}
-\end{subfigure}
-
-\vspace{0.5em}
-
+\includegraphics[width=\linewidth]{poincare_meru_pacs_perdomain.pdf}
+\caption{MERU variant, per-domain scale}
+\end{subfigure}\hfill
 \begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_hyperdg_officehome_singlecurv.pdf}
-\caption{OfficeHome}
+\includegraphics[width=\linewidth]{poincare_meru_pacs_singlecurv.pdf}
+\caption{MERU variant, shared scale}
 \end{subfigure}
-\hfill
-\begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_hyperdg_domainnet_singlecurv.pdf}
-\caption{DomainNet}
-\end{subfigure}
-
-\vspace{0.5em}
-
-\begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_hyperdg_terra_singlecurv.pdf}
-\caption{TerraIncognita}
-\end{subfigure}
-
-\caption{HyperDG using a single shared learnable curvature. Radial distributions become more uniform.}
+\caption{Post-hoc PACS projections (split 0).}
+\label{fig:poincare-pacs}
 \end{figure}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{MERU Backbone Visualizations}
 
 \begin{figure}[H]
 \centering
-
 \begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_meru_pacs_perdomain.pdf}
-\caption{PACS + Per-domain}
-\end{subfigure}
-\hfill
+\includegraphics[width=\linewidth]{poincare_hyperdg_vlcs_perdomain.pdf}
+\caption{HyperDG, per-domain scale}
+\end{subfigure}\hfill
 \begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_meru_pacs_singlecurv.pdf}
-\caption{PACS + Single Curvature}
+\includegraphics[width=\linewidth]{poincare_hyperdg_vlcs_singlecurv.pdf}
+\caption{HyperDG, shared scale}
 \end{subfigure}
-
-\vspace{0.5em}
-
 \begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_meru_domainnet_perdomain.pdf}
-\caption{DomainNet + Per-domain}
-\end{subfigure}
-\hfill
+\includegraphics[width=\linewidth]{poincare_meru_vlcs_perdomain.pdf}
+\caption{MERU variant, per-domain scale}
+\end{subfigure}\hfill
 \begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{poincare_meru_domainnet_singlecurv.pdf}
-\caption{DomainNet + Single Curvature}
+\includegraphics[width=\linewidth]{poincare_meru_vlcs_singlecurv.pdf}
+\caption{MERU variant, shared scale}
 \end{subfigure}
-
-\caption{MERU-based variants exhibit tighter clusters due to stronger hyperbolic priors from pretraining.}
+\caption{Post-hoc VLCS projections (split 0).}
+\label{fig:poincare-vlcs}
 \end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \section{Curvature Evolution During Training}
-
-% \begin{figure}[H]
-% \centering
-% \includegraphics[width=0.8\linewidth]{curvature_training_curve.pdf}
-% \caption{Evolution of learned curvature parameters during training. Values stabilize rapidly and converge to a narrow band, validating variance regularization.}
-% \end{figure}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Additional ablation tables}
-
-\subsection{Single shared curvature vs.\ per-domain curvature}
-
-\begin{table}[H]
+\begin{figure}[H]
 \centering
-\caption{Per-domain learnable $K_i$ vs.\ a single shared learnable $K$
-(seed $0$; mean $\pm$ std over the four leave-one-out splits). The two
-parameterizations are within ${\pm}0.5$ pp of each other on every
-benchmark consistent with the main-paper finding that the per-domain
-parameterization is not the source of any geometric benefit. Earlier
-draft numbers (PACS $92.2$, VLCS $81.8$, etc.) are superseded by these
-reproducible values.}
-\begin{tabular}{lccc}
-\toprule
-Dataset           & Per-domain $K_i$ & Single shared $K$ & $\Delta$ \\
-\midrule
-PACS              & 84.76 $\pm$ 7.55  & 85.29 $\pm$ 5.23  & $+0.53$ \\
-VLCS              & 77.49 $\pm$ 15.38 & 76.21 $\pm$ 16.24 & $-1.28$ \\
-OfficeHome        & 66.73 $\pm$ 10.34 & 65.50 $\pm$ 10.11 & $-1.23$ \\
-TerraIncognita    & 43.41 $\pm$ 5.45  & 43.25 $\pm$ 3.27  & $-0.16$ \\
-DomainNet         & 52.1$^{*}$        & 52.6$^{*}$        & $+0.5$  \\
-\bottomrule
-\end{tabular}
-\\[2pt]
-{\footnotesize $^*$ DomainNet rows were not re-evaluated under the new
-pipeline (compute-limited) and are shown only for context.}
-\end{table}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_hyperdg_officehome_perdomain.pdf}
+\caption{HyperDG, per-domain scale}
+\end{subfigure}\hfill
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_hyperdg_officehome_singlecurv.pdf}
+\caption{HyperDG, shared scale}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_meru_officehome_perdomain.pdf}
+\caption{MERU variant, per-domain scale}
+\end{subfigure}\hfill
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_meru_officehome_singlecurv.pdf}
+\caption{MERU variant, shared scale}
+\end{subfigure}
+\caption{Post-hoc OfficeHome projections (split 0).}
+\label{fig:poincare-officehome}
+\end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Runtime Overhead}
-
-\begin{table}[H]
+\begin{figure}[H]
 \centering
-\caption{Wall-clock training cost.}
-\begin{tabular}{lcc}
-\toprule
-Method & ms/step & Relative Cost \\
-\midrule
-ERM & 464.81 & 1.00$\times$ \\
-SFT & 581.40 & 1.25$\times$ \\
-HyperDG & 458.69 & 0.99$\times$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_hyperdg_domainnet_perdomain.pdf}
+\caption{HyperDG, per-domain scale}
+\end{subfigure}\hfill
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_hyperdg_domainnet_singlecurv.pdf}
+\caption{HyperDG, shared scale}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_meru_domainnet_perdomain.pdf}
+\caption{MERU variant, per-domain scale}
+\end{subfigure}\hfill
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_meru_domainnet_singlecurv.pdf}
+\caption{MERU variant, shared scale}
+\end{subfigure}
+\caption{Post-hoc DomainNet projections (split 0). These are visualization
+artifacts only; the available accuracy runs are not a controlled comparison.}
+\label{fig:poincare-domainnet}
+\end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Implementation Notes}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_hyperdg_terra_perdomain.pdf}
+\caption{HyperDG, per-domain scale}
+\end{subfigure}\hfill
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_hyperdg_terra_singlecurv.pdf}
+\caption{HyperDG, shared scale}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_meru_terra_perdomain.pdf}
+\caption{MERU variant, per-domain scale}
+\end{subfigure}\hfill
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\linewidth]{poincare_meru_terra_singlecurv.pdf}
+\caption{MERU variant, shared scale}
+\end{subfigure}
+\caption{Post-hoc TerraIncognita projections (split 0).}
+\label{fig:poincare-terra}
+\end{figure}
 
-All supplementary experiments use the same optimizer, seeds, splits, and evaluation protocol as the main paper unless otherwise stated.
+\section{Exploratory Benchmarks Not Used for Claims}
+\label{sec:excluded}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Reproducibility}
+\subsection{MERU status}
 
-All 292 runs (Batches 1--4) are reproducible end-to-end from the released
-configurations and aggregation scripts. The repository layout is:
-\begin{itemize}[leftmargin=1.5em]
-\item \texttt{configs/batch\{1,2,3,4\}/} -- per-batch YAML configurations.
-\item \texttt{experiments/batch\{1,2,3,4\}/} -- per-run \texttt{metrics.jsonl} +
-      final checkpoints.
-\item \texttt{scripts/aggregate\_batch4.py} -- regenerates the multi-seed
-      headline table and paired $t$-tests.
-\item \texttt{scripts/plot\_curvature\_trajectories.py} -- regenerates the
-      trajectory figures and the curvature-spread CSV.
-\item \texttt{scripts/plot\_poincare\_disk.py} -- regenerates the
-      class-prototype Poincar\'e disks.
+The repository contains 22 per-domain and 22 shared-scale MERU configurations,
+all at seed 0. Four did not complete:
+\begin{itemize}
+    \item per-domain DomainNet split 4: final recorded step 3,000/4,999;
+    \item shared DomainNet split 3: step 2,000/4,999;
+    \item shared DomainNet split 4: malformed/incomplete final record;
+    \item shared DomainNet split 5: step 4,200/4,999.
 \end{itemize}
+Furthermore, the implemented contrastive positive mask selects all same-class,
+different-index samples after concatenating domains. It does not retain domain
+IDs and therefore mixes intra-domain and inter-domain positives. The existing
+runs cannot answer the requested inter-versus-intra contrastive question. The
+MERU total-loss expression also adds the global consistency term twice; that
+must be corrected before rerunning. We
+exclude their accuracy averages rather than presenting an incomplete table.
 
-\section{Acknowledgement of the action editor's feedback}
+\subsection{Camelyon17 status}
 
-We thank the action editor for the explicit invitation to embrace the
-negative empirical finding and for the strong suggestion that a careful
-negative result is a contribution worth publishing. The present revision
-attempts to honor that invitation: rather than defending the original
-positive claim by tweaking the protocol, we present the controlled
-multi-seed comparison, the leave-one-out source-of-gains decomposition,
-and the curvature-trajectory diagnostic as the evidence and let the
-implications speak for themselves.
+Five HyperDG-only runs use a custom leave-one-hospital-out adaptation of
+Camelyon17. They complete at step 4,999 and yield the descriptive values in
+Table~\ref{tab:camelyon}. This is not the official WILDS train/validation/test
+protocol, has one seed, and lacks a matched ERM or SAM control. It is therefore
+not evidence that \method{} improves robustness on WILDS.
+
+\begin{table}[H]
+\centering
+\caption{Exploratory HyperDG-only Camelyon17 leave-one-hospital-out accuracy.
+The final row is sample SD over hospitals.}
+\label{tab:camelyon}
+\begin{tabular}{lr}
+\toprule
+Held-out hospital & Accuracy (\%) \\
+\midrule
+0 & 97.03 \\
+1 & 93.34 \\
+2 & 95.67 \\
+3 & 93.43 \\
+4 & 63.86 \\
+\midrule
+Mean & 88.67 \\
+SD & 13.95 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Reproduction Commands}
+\label{sec:repro}
+
+The principal generated artifacts are reproduced with:
+\begin{verbatim}
+PYTHONPATH=third_party/domainbed conda run -n sftdg \
+  python scripts/aggregate_batch4.py
+PYTHONPATH=third_party/domainbed conda run -n sftdg \
+  python scripts/plot_forest_erm_vs_hyperdg.py
+PYTHONPATH=third_party/domainbed conda run -n sftdg \
+  python scripts/plot_curvature_trajectories.py
+PYTHONPATH=third_party/domainbed conda run -n sftdg \
+  python scripts/aggregate_secondary.py
+\end{verbatim}
+The main aggregation writes raw per-run accuracy and effect summaries to
+\texttt{outputs/batch4\_per\_run.csv} and
+\texttt{outputs/batch4\_summary.csv}. Secondary tables are generated as
+separate CSV files under \texttt{outputs/}.
 
 \end{document}

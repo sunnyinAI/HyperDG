@@ -1,0 +1,8 @@
+condition,pacs_mean,pacs_std,officehome_mean,officehome_std
+full,84.7573,7.5484,66.7334,10.3388
+drop_alignment,84.8003,7.9148,68.1357,9.7049
+drop_norm_proxy,87.0557,7.0180,66.1447,10.8968
+drop_local_global,84.2452,8.1713,66.6997,11.8097
+drop_variance,83.6965,8.2227,65.6317,10.9864
+freeze_curvature,85.2814,7.4785,65.6427,11.1796
+zero_penalty,84.0934,6.8653,67.2532,12.0177

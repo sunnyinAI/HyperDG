@@ -4,9 +4,9 @@ Addresses Reviewer hQnG's second experiment request:
   "Redoing all the experiments with a pretrained Meru backbone and a
    hyperbolic-contrastive loss."
 
-The hyperbolic contrastive loss operates in the Lorentz model and
-pulls same-class representations together while pushing apart
-different-class representations across domains.
+The hyperbolic contrastive loss operates in the Lorentz model and uses all
+same-class representations as positives after concatenating domains. The
+current implementation therefore mixes intra-domain and inter-domain pairs.
 
 No entailment loss is used (as the reviewer specified).
 """
@@ -61,7 +61,7 @@ def _exp_map_origin(v: torch.Tensor, curv: torch.Tensor) -> torch.Tensor:
 class HyperbolicContrastiveLoss(nn.Module):
     """InfoNCE-style contrastive loss in Lorentz space.
 
-    Positive pairs  : same-class samples across domains.
+    Positive pairs  : same-class samples, within or across domains.
     Negative pairs  : different-class samples (random subset).
     Temperature is in geodesic-distance units.
     """

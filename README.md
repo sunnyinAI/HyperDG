@@ -1,287 +1,151 @@
-# HyperDG
+# HyperDG: Controlled Re-evaluation
 
-**Paper title:** *HyperDG: Hyperbolic Representation Alignment for Robust Domain Generalization via Curvature Refinement*  
-(Under review as a TMLR submission; see `HyperDG_TMLR.pdf`)
+**Paper:** *Do Domain-Specific Curvature Scales Improve Domain Generalization? A Controlled Re-evaluation of HyperDG*
 
-This repository contains the PyTorch + DomainBed implementation of **HyperDG**, including all experiments from the TMLR reviewer response (single-curvature ablation, MERU backbone, and Poincaré disk visualisations).
+This repository contains an implementation-faithful, controlled negative-result study of a curvature-inspired domain-generalization objective. The revised paper does **not** claim state-of-the-art performance or that per-domain curvature improves generalization.
 
----
+## Main Finding
 
-## Method Summary
+Across PACS, VLCS, OfficeHome, and TerraIncognita, the full objective was compared with a matched zero-penalty control using four seeds and all four leave-one-domain-out splits (`n=16` matched runs per cell). No comparison remained significant after Holm correction over the 12 planned variant-by-dataset tests.
 
-HyperDG optimizes a supervised objective with geometry-aware regularization:
+| Dataset | Control | Full objective | Difference | Raw p | Holm p |
+|---|---:|---:|---:|---:|---:|
+| PACS | 84.04 +/- 7.10 | 84.50 +/- 7.45 | +0.45 pp | 0.534 | 1.000 |
+| VLCS | 75.63 +/- 13.32 | 75.47 +/- 14.14 | -0.15 pp | 0.713 | 1.000 |
+| OfficeHome | 67.05 +/- 10.26 | 66.03 +/- 9.98 | -1.02 pp | 0.013 | 0.153 |
+| TerraIncognita | 43.90 +/- 8.49 | 43.17 +/- 4.97 | -0.73 pp | 0.631 | 1.000 |
 
-$$\mathcal{L} = \mathcal{L}_{sup} + \alpha\,\mathcal{L}_{curv} + \beta\,\mathcal{L}_{align} + \gamma\,\mathcal{L}_{sharp} + \delta_l\,\mathcal{L}_{local} + \delta_g\,\mathcal{L}_{global}$$
+The control shares the HyperDG code path with all auxiliary coefficients and curvature learning disabled. It is an ERM-like matched control, not a separately implemented standard DomainBed ERM.
 
-Key components:
-- **Per-domain learnable curvature** `{α_i}` on separate Lorentz manifolds, regularised by `λ_var` to prevent divergence.
-- **Single shared curvature** mode (`single_curvature: true`) as an ablation — nearly identical performance, validating the variance regulariser design.
-- **MERU backbone** variant (`algorithm: hyperdg_meru`) using facebookresearch/MERU ViT-B/16 pretrained in hyperbolic space, with a hyperbolic InfoNCE contrastive loss in Lorentz space.
+## What the Code Implements
 
----
-
-## Repository Layout
+For source domain `i`, the released algorithm learns a positive scalar
 
 ```text
-.
-├── configs/
-│   ├── datasets/              # Dataset YAML configs (PACS, VLCS, OfficeHome, etc.)
-│   ├── training/              # Base training configs
-│   └── reviewer_hQnG/        # Reviewer experiment configs (66 runs)
-│       ├── single_curv/      # Single-α ablation (22 configs)
-│       ├── meru/             # MERU per-domain α (22 configs)
-│       └── meru_single/      # MERU single α (22 configs)
-├── outputs/                   # Poincaré disk plots (20 PDFs)
-├── scripts/
-│   ├── train.py              # Main training entry point
-│   ├── plot_poincare_disk.py # Poincaré disk visualisation
-│   ├── plot_all_poincare.sh  # Batch script: all 20 plots
-│   ├── generate_reviewer_configs.py  # Config generator
-│   ├── summarize_reviewer_hQnG.py    # Results aggregation
-│   └── run_meru_*.sh         # GPU runner scripts for MERU experiments
-├── src/sftdg/
-│   ├── algorithms/
-│   │   ├── hyperdg.py        # HyperDG (per-domain + single-curv mode)
-│   │   ├── hyperdg_meru.py   # HyperDG-MERU (MERU backbone + hyperbolic InfoNCE)
-│   │   └── ...
-│   └── models/
-│       ├── backbones.py      # Backbone router (resnet / vit / meru_*)
-│       ├── meru_backbone.py  # MERU ViT-B/16 wrapper
-│       └── ...
-├── environment.yml
-└── README.md
+c_i = softplus(a_i) + epsilon
 ```
 
----
+and rescales encoder features as
 
-## Environment Setup
+```text
+z_i = h_theta(x) / sqrt(c_i).
+```
+
+The training objective combines:
+
+- supervised cross-entropy on the scaled features;
+- alignment of source-domain minibatch means;
+- pairwise curvature-scale dispersion;
+- a curvature-weighted feature-norm variance proxy;
+- the magnitude of the supervised-loss derivative with respect to curvature;
+- disagreement between domain-specific and global feature scales.
+
+The primary `hyperdg` implementation does **not** use Lorentz log/exp maps, geodesic classification, prototype transport, or a SAM inner maximization. At evaluation, it predicts from the unscaled encoder features because an unseen target has no source-domain curvature index. The paper and supplementary material use terminology that reflects these executed computations.
+
+## Controlled Experiment Inventory
+
+All Batch 1-4 controlled configurations completed:
+
+| Batch | Runs | Purpose |
+|---|---:|---|
+| Batch 1 | 44 | Frozen curvature, no variance, PACS variance-weight sweep |
+| Batch 2 | 40 | Zero-penalty control and component removal |
+| Batch 3 | 16 | Seed-0 full objective |
+| Batch 4 | 192 | Seeds 1-3 for all four primary conditions |
+| **Total** | **292** | 256 primary + 36 diagnostic runs |
+
+The direct shared-curvature study is only seed 0. PACS, VLCS, and OfficeHome have four complete splits; TerraIncognita has three because split 1 stopped at step 2600. It should not be described as a completed multi-seed equivalence test.
+
+## Reproduce the Tables and Figures
 
 ```bash
 conda env create -f environment.yml
 conda activate sftdg
-pip install -e .
-pip install omegaconf beautifulsoup4    # required for MERU + TerraIncognita download
-export PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/third_party/domainbed
+export PYTHONPATH=third_party/domainbed
+
+python scripts/aggregate_batch4.py
+python scripts/plot_forest_erm_vs_hyperdg.py
+python scripts/plot_curvature_trajectories.py
+python scripts/aggregate_secondary.py
 ```
 
----
+Generated evidence is written under `outputs/`:
 
-## Dataset Setup
+- `batch4_per_run.csv`: all 256 primary accuracy observations;
+- `batch4_summary.csv`: means, paired effects, confidence intervals, raw p-values, and Holm-adjusted p-values;
+- `forest_erm_vs_hyperdg.pdf`: paired-effect forest plot;
+- `curvature_trajectories*.pdf` and `curvature_summary.csv`: curvature dynamics;
+- `shared_curvature_seed0.csv`: completion-filtered shared-curvature diagnostic;
+- `loo_seed0.csv`: leave-one-component-out results;
+- `proxy_ablation_officehome_seed0.csv`: legacy sharpness/flatness proxy decomposition;
+- `variance_sweep_pacs_seed0.csv`: one-factor variance-weight sweep.
+
+## Train a Configuration
 
 ```bash
-# PACS, VLCS, TerraIncognita
-python -m domainbed.scripts.download --data_dir data --dataset PACS
-python -m domainbed.scripts.download --data_dir data --dataset VLCS
-python -m domainbed.scripts.download --data_dir data --dataset TerraIncognita
-
-# OfficeHome and DomainNet: place in paths from configs/datasets/
-# WILDS
-python scripts/download_datasets.py --root data/wilds --datasets WILDSCamelyon
+PYTHONPATH=third_party/domainbed python scripts/train.py \
+  --config configs/training/resnet50_hyperdg_pacs.yaml \
+  --device cuda
 ```
 
----
+Primary controlled configurations are under:
 
-## Training
+```text
+configs/batch1/
+configs/batch2/
+configs/batch3/
+configs/batch4/
+```
 
-### Standard HyperDG (ResNet-50, per-domain curvature)
+## Runtime Benchmark
+
+A genuine DomainBed ERM timing configuration is provided at:
+
+```text
+configs/training/resnet50_erm_pacs.yaml
+```
+
+Example:
 
 ```bash
-python scripts/train.py --config configs/training/resnet50_hyperdg_pacs.yaml --device cuda
-python scripts/train.py --config configs/training/resnet50_hyperdg_vlcs.yaml --device cuda
-python scripts/train.py --config configs/training/resnet50_hyperdg_officehome.yaml --device cuda
+PYTHONPATH=third_party/domainbed python scripts/measure_training_time.py \
+  --configs \
+    configs/training/resnet50_erm_pacs.yaml \
+    configs/training/resnet50_hyperdg_pacs.yaml \
+    configs/training/resnet50_sft_pacs.yaml \
+  --labels ERM HyperDG SFT \
+  --baseline-label ERM \
+  --warmup 20 --steps 200 --device cuda
 ```
 
-### Single shared curvature ablation
+Across five order-rotated repeats, ERM measured `456.16 +/- 26.89` ms/step,
+HyperDG `464.27 +/- 8.04` ms/step, and SFT `583.67 +/- 4.39` ms/step. HyperDG's
+within-repeat relative cost was `1.020 +/- 0.060x` versus ERM. The previous
+timing table labeled a `flatland` curvature configuration as ERM and is
+superseded by this repeated genuine-ERM benchmark.
 
-Add `single_curvature: true` to any config's `hparams` block, or use the pre-generated reviewer configs:
+## Manuscript
+
+- Main source: `HyperDG_TMLR/main.tex`
+- Main PDF: `HyperDG_TMLR/main.pdf`
+- Supplement source: `HyperDG_TMLR/supplementary.tex`
+- Supplement PDF: `HyperDG_TMLR/supplementary.pdf`
+
+Compile with Tectonic 0.15 or later:
 
 ```bash
-python scripts/train.py \
-    --config configs/reviewer_hQnG/single_curv/pacs_split0.yaml --device cuda
+cd HyperDG_TMLR
+tectonic main.tex
+tectonic supplementary.tex
 ```
 
-Run all five datasets, all splits (GPUs 2 & 3):
+## Scope and Remaining Work
 
-```bash
-bash scripts/run_reviewer_hQnG_gpu2.sh   # PACS, VLCS, TerraIncognita
-bash scripts/run_reviewer_hQnG_gpu3.sh   # OfficeHome, DomainNet
-```
+The following artifacts exist but are not confirmatory evidence:
 
-### MERU backbone + hyperbolic contrastive loss
+- MERU runs are incomplete, the contrastive mask mixes intra- and inter-domain positives, and the current MERU objective adds the global-consistency term twice.
+- Camelyon17 has five HyperDG-only custom leave-one-hospital-out runs, with no matched baseline and no official WILDS protocol result.
+- The available `lambda_align`/legacy proxy sweep changes several coefficients simultaneously and does not establish one-factor cross-dataset sensitivity.
+- Poincare figures are post-hoc PCA/fixed-curvature projections, not proof of end-to-end hyperbolic training.
 
-MERU weights (ViT-B/16, ~1.7 GB) are downloaded automatically to `~/.cache/meru/meru_vit_b.pth` on first run.
-
-```bash
-# Per-domain curvature
-python scripts/train.py \
-    --config configs/reviewer_hQnG/meru/pacs_split0.yaml --device cuda
-
-# Single shared curvature
-python scripts/train.py \
-    --config configs/reviewer_hQnG/meru_single/pacs_split0.yaml --device cuda
-```
-
-Run all datasets in parallel across GPUs:
-
-```bash
-bash scripts/run_meru_terra_gpu1.sh      # GPU 1: TerraIncognita
-bash scripts/run_meru_domainnet_gpu2.sh  # GPU 2: DomainNet per-domain
-bash scripts/run_meru_domainnet_gpu3.sh  # GPU 3: DomainNet single-α
-```
-
-**MERU config hparams:**
-
-```yaml
-algorithm: hyperdg_meru
-hparams:
-  backbone: meru_vit_b16
-  meru_variant: vit_b16
-  meru_pretrained: true
-  meru_freeze_backbone: true
-  lambda_contrast: 0.1
-  contrast_temp: 0.07
-  single_curvature: false   # set true for single-α variant
-```
-
----
-
-## Poincaré Disk Visualisation
-
-Follows the exact approach of seminal hyperbolic learning papers:  
-**PCA → exp-map at fixed K=1 → stereographic projection** (no UMAP, geometry-faithful).
-
-```bash
-# Single plot
-python scripts/plot_poincare_disk.py \
-    --config configs/reviewer_hQnG/meru/pacs_split0.yaml \
-    --ckpt  experiments/reviewer_hQnG/meru/pacs_split0/model_last.pt \
-    --out   outputs/poincare_meru_pacs_perdomain.pdf \
-    --n_samples 300 \
-    --device cuda:2
-
-# All 20 plots at once (skips missing checkpoints safely)
-bash scripts/plot_all_poincare.sh --device cuda:2
-```
-
-Generated plots are saved to `outputs/poincare_*.pdf`:
-
-| File pattern | Description |
-|---|---|
-| `poincare_hyperdg_{ds}_perdomain.pdf` | HyperDG per-domain α, all 5 datasets |
-| `poincare_hyperdg_{ds}_singlecurv.pdf` | HyperDG single α, all 5 datasets |
-| `poincare_meru_{ds}_perdomain.pdf` | MERU + per-domain α, all 5 datasets |
-| `poincare_meru_{ds}_singlecurv.pdf` | MERU + single α, all 5 datasets |
-
----
-
-## Results
-
-### Single-α ablation (HyperDG, ResNet-50)
-
-| Dataset | Per-domain α | Single α | Δ |
-|---|---|---|---|
-| PACS | 92.2 ± 1.2 | 92.2 ± 0.8 | 0.0 |
-| VLCS | 81.8 ± 1.4 | 81.5 ± 1.1 | −0.3 |
-| OfficeHome | 76.8 | 76.6 ± 0.9 | −0.2 |
-| DomainNet | 52.1 ± 0.4 | 53.6 ± 0.4 | +1.5 |
-| TerraIncognita | — | 77.1 ± 1.7 | — |
-
-Differences ≤ 0.3 pp on 4/5 datasets — the variance regulariser `λ_var` drives per-domain curvatures to consensus, validating the design.
-
-### MERU backbone (ViT-B/16, frozen, hyperbolic pretrained)
-
-| Dataset | MERU per-domain α | MERU single α | Δ |
-|---|---|---|---|
-| PACS | 90.0 ± 1.5 | 90.1 ± 1.7 | +0.1 |
-| VLCS | 84.9 ± 0.7 | 85.0 ± 0.6 | +0.1 |
-| OfficeHome | 70.3 ± 1.0 | 70.4 ± 1.0 | +0.1 |
-| DomainNet | 23.7 ± 2.4 | 22.9 ± 2.6 | −0.8 |
-| TerraIncognita | 59.4 ± 2.9 | 59.3 ± 3.2 | −0.1 |
-
-Geometry problems persist even with a hyperbolic pretrained backbone, confirming domain curvature shift is not an artefact of Euclidean pretraining.
-
----
-
-## Results Aggregation
-
-```bash
-# Summarise all reviewer hQnG experiments
-python scripts/summarize_reviewer_hQnG.py
-
-# Standard metrics aggregation
-python scripts/aggregate_metrics.py \
-    --root experiments/hyperdg_pacs --num-envs 4 --verbose
-```
-
----
-
-## Ablations (Original Paper)
-
-### Loss component ablation
-
-| Condition | alpha_curv | beta_align | gamma_sharp | delta_* |
-|---|---|---|---|---|
-| ERM baseline | 0 | 0 | 0 | 0 |
-| SAM-like only | 0 | 0 | 0.05 | 0.1 |
-| HyperDG w/o SAM | 0.2 | 0.5 | 0 | 0 |
-| HyperDG full | 0.2 | 0.5 | 0.05 | 0.1 |
-
-```bash
-python scripts/run_ablation_grid.py \
-    --base-config configs/training/resnet50_hyperdg_officehome.yaml \
-    --schedule hyperdg_sam_ablation --gpus 0,1,2,3
-```
-
-### Hyperparameter sensitivity
-
-```bash
-python scripts/plot_hparam_sensitivity.py \
-    --sweep-root experiments/ablations/hyperdg_penalty_sweep \
-    --num-envs 4 --output outputs/hparam_sensitivity.pdf
-```
-
----
-
-## Computational Cost
-
-| Method | ms/step | Relative |
-|---|---|---|
-| ERM | 464.81 | 1.00× |
-| SFT | 581.40 | 1.25× |
-| HyperDG | 458.69 | 0.99× |
-
-```bash
-python scripts/measure_training_time.py \
-    --configs configs/training/resnet50_hyperdg_pacs.yaml \
-    --labels HyperDG --warmup 20 --steps 200 --device cuda
-```
-
----
-
-## Notes
-
-- Package path is `sftdg` throughout for compatibility with existing code.
-- Algorithm names: `hyperdg` (standard), `hyperdg_meru` (MERU variant).
-- MERU weights auto-download on first use; requires ~1.7 GB disk space.
-- DomainNet with MERU creates ~138 DataLoader worker processes — this is normal.
-- Re-run `bash scripts/plot_all_poincare.sh` at any time; it safely skips missing checkpoints.
-
----
-
-## Citation
-
-```bibtex
-@article{hyperdg2026,
-  title   = {HyperDG: Hyperbolic Representation Alignment for Robust Domain Generalization via Curvature Refinement},
-  author  = {Anonymous},
-  journal = {TMLR (under review)},
-  year    = {2026}
-}
-
-@inproceedings{desai2023meru,
-  title     = {Hyperbolic Image-Text Representations},
-  author    = {Desai, Karan and Nickel, Maximilian and Rajpurohit, Tanmay and Johnson, Justin and Vedantam, Ramakrishna},
-  booktitle = {ICML},
-  year      = {2023}
-}
-```
+A stronger follow-up requires a standard ERM accuracy baseline, a true SAM baseline if SAM is claimed, multi-seed shared-curvature runs, controlled MERU inter/intra contrastive experiments, and a matched official WILDS evaluation.

@@ -1,17 +1,17 @@
-condition,dataset,n_runs,mean_acc,std_acc,p_vs_erm_paired
-ERM (all losses off),pacs,16,84.0414,7.0979,
-ERM (all losses off),vlcs,16,75.6254,13.3187,
-ERM (all losses off),officehome,16,67.0541,10.2633,
-ERM (all losses off),terraincognita,16,43.8989,8.4943,
-Full HyperDG (alpha_var=0.2),pacs,16,84.4955,7.4530,0.5336
-Full HyperDG (alpha_var=0.2),vlcs,16,75.4709,14.1442,0.7130
-Full HyperDG (alpha_var=0.2),officehome,16,66.0317,9.9829,0.0128
-Full HyperDG (alpha_var=0.2),terraincognita,16,43.1663,4.9717,0.6313
-Curvature frozen (no learning),pacs,16,84.6673,7.4177,0.3014
-Curvature frozen (no learning),vlcs,16,76.2697,13.1670,0.2370
-Curvature frozen (no learning),officehome,16,66.1296,9.7768,0.0200
-Curvature frozen (no learning),terraincognita,16,44.3034,6.7440,0.7838
-No variance reg (alpha_var=0),pacs,16,84.5703,6.9173,0.4220
-No variance reg (alpha_var=0),vlcs,16,75.0391,14.2549,0.3481
-No variance reg (alpha_var=0),officehome,16,66.0272,9.7509,0.0168
-No variance reg (alpha_var=0),terraincognita,16,43.8993,6.9377,0.0206
+condition,dataset,n_runs,mean_acc,std_acc,mean_diff_vs_control,ci95_low,ci95_high,p_vs_control_raw,p_vs_control_holm_12
+Zero-penalty control,pacs,16,84.0414,7.0979,,,,,
+Zero-penalty control,vlcs,16,75.6254,13.3187,,,,,
+Zero-penalty control,officehome,16,67.0541,10.2633,,,,,
+Zero-penalty control,terraincognita,16,43.8989,8.4943,,,,,
+Full HyperDG (alpha_var=0.2),pacs,16,84.4955,7.4530,0.4541,-1.0647,1.9728,0.533576,1.000000
+Full HyperDG (alpha_var=0.2),vlcs,16,75.4709,14.1442,-0.1545,-1.0329,0.7239,0.713032,1.000000
+Full HyperDG (alpha_var=0.2),officehome,16,66.0317,9.9829,-1.0224,-1.7935,-0.2513,0.012771,0.153256
+Full HyperDG (alpha_var=0.2),terraincognita,16,43.1663,4.9717,-0.7326,-3.9205,2.4552,0.631325,1.000000
+Curvature frozen (no learning),pacs,16,84.6673,7.4177,0.6259,-0.6204,1.8721,0.301368,1.000000
+Curvature frozen (no learning),vlcs,16,76.2697,13.1670,0.6443,-0.4706,1.7592,0.237015,1.000000
+Curvature frozen (no learning),officehome,16,66.1296,9.7768,-0.9244,-1.6817,-0.1672,0.020011,0.200114
+Curvature frozen (no learning),terraincognita,16,44.3034,6.7440,0.4044,-2.6817,3.4906,0.783809,1.000000
+No variance reg (alpha_var=0),pacs,16,84.5703,6.9173,0.5289,-0.8367,1.8944,0.422037,1.000000
+No variance reg (alpha_var=0),vlcs,16,75.0391,14.2549,-0.5862,-1.8763,0.7038,0.348118,1.000000
+No variance reg (alpha_var=0),officehome,16,66.0272,9.7509,-1.0269,-1.8411,-0.2127,0.016846,0.185301
+No variance reg (alpha_var=0),terraincognita,16,43.8993,6.9377,0.0003,-3.7260,3.7267,0.999845,1.000000

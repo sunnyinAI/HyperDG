@@ -1,0 +1,17 @@
+experiment_name: erm_resnet50_pacs
+seed: 0
+output_dir: experiments/erm_pacs
+device: cuda
+
+dataset:
+  config: configs/datasets/pacs.yaml
+
+algorithm: ERM
+
+hparams:
+  lr: 5.0e-5
+  weight_decay: 0.0
+  batch_size: 32
+  nonlinear_classifier: false
+  n_steps: 5000
+  checkpoint_freq: 200

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Hyperparameter sensitivity analysis for HyperDG.
+"""Legacy exploratory visualization of the HyperDG penalty grid.
 
-Addresses reviewer request: "Report how performance varies with λ_align,
-λ_fb, λ_var. Are these stable across datasets?"
+The built-in grid changes several coefficients between configurations and is
+not a one-factor sensitivity study. It also does not establish stability across
+datasets. The revised paper therefore excludes this figure from its evidence.
 
 The script reads metrics.jsonl files produced by run_ablation_grid.py
 (hyperdg_penalty_sweep schedule) and generates a sensitivity figure showing
@@ -90,7 +91,13 @@ def parse_args() -> argparse.Namespace:
         "--num-envs",
         type=int,
         default=4,
-        help="Number of held-out eval domains per run (used when --sweep-root is given).",
+        help="Legacy option retained for CLI compatibility.",
+    )
+    parser.add_argument(
+        "--test-env",
+        type=int,
+        default=0,
+        help="Held-out environment whose out accuracy is plotted (default: 0).",
     )
     parser.add_argument(
         "--dataset-label",
@@ -130,14 +137,12 @@ def _load_latest(path: Path) -> Optional[Dict]:
     return json.loads(lines[-1])
 
 
-def _avg_acc(record: Dict, num_envs: int) -> Optional[float]:
-    accs = [record.get(f"env{i}_out_acc") for i in range(num_envs)]
-    if any(a is None for a in accs):
-        return None
-    return float(sum(accs) / len(accs)) * 100.0
+def _heldout_acc(record: Dict, test_env: int) -> Optional[float]:
+    value = record.get(f"env{test_env}_out_acc")
+    return float(value) * 100.0 if value is not None else None
 
 
-def load_from_sweep(sweep_root: Path, num_envs: int) -> List[Dict]:
+def load_from_sweep(sweep_root: Path, test_env: int) -> List[Dict]:
     """
     Walk sweep_root, match experiment name suffixes to known hparam values,
     and return a list of {hparam, value, accuracy} records.
@@ -149,7 +154,7 @@ def load_from_sweep(sweep_root: Path, num_envs: int) -> List[Dict]:
         metrics = _load_latest(exp_dir / "metrics.jsonl")
         if metrics is None:
             continue
-        acc = _avg_acc(metrics, num_envs)
+        acc = _heldout_acc(metrics, test_env)
         if acc is None:
             continue
         name = exp_dir.name
@@ -210,7 +215,12 @@ def main() -> None:
     )
 
     if args.sweep_root:
-        rows = load_from_sweep(Path(args.sweep_root), args.num_envs)
+        print(
+            "WARNING: the built-in penalty grid is confounded because multiple "
+            "coefficients change between configurations; use this plot for "
+            "exploration only."
+        )
+        rows = load_from_sweep(Path(args.sweep_root), args.test_env)
     else:
         rows = load_from_csv(Path(args.csv))
 

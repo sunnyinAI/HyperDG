@@ -1,0 +1,4 @@
+algorithm,config,steps,ms_per_step,peak_memory_mb,relative
+HyperDG,configs/training/resnet50_hyperdg_pacs.yaml,200,477.5482,8306.28,1.0774
+SFT,configs/training/resnet50_sft_pacs.yaml,200,582.2895,3090.82,1.3137
+ERM,configs/training/resnet50_erm_pacs.yaml,200,443.2604,8320.32,1.0000

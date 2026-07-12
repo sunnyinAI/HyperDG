@@ -33,3 +33,4 @@ dependencies:
       - wandb
       - gdown
       - beautifulsoup4
+      - wilds==2.0.0
