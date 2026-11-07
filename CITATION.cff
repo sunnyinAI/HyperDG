@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "Cite the historical HyperDG manuscript when referring to the original submission."
+type: software
+title: HyperDG
+authors:
+  - given-names: Sunny
+    family-names: Gupta
+  - given-names: Amit
+    family-names: Sethi
+repository-code: https://github.com/sunnyinAI/HyperDG
+preferred-citation:
+  type: unpublished
+  title: "HyperDG: Hyperbolic Representation Alignment for Robust Domain Generalization via Curvature Refinement"
+  authors:
+    - given-names: Sunny
+      family-names: Gupta
+    - given-names: Amit
+      family-names: Sethi
+  year: 2026
+  url: https://openreview.net/forum?id=TSshrjqnXu

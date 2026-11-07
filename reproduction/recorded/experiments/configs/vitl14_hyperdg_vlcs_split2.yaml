@@ -1,0 +1,29 @@
+algorithm: fedcuri
+dataset:
+  config: configs/datasets/vlcs.yaml
+  test_envs:
+  - 2
+device: cuda
+experiment_name: vitl14_fedcuri_vlcs_split2
+hparams:
+  alpha_curv: 0.2
+  backbone: vitl14
+  batch_size: 8
+  beta_align: 0.5
+  checkpoint_freq: 200
+  curvature_epsilon: 0.0001
+  curvature_lr: 0.0001
+  delta_global_flat: 0.1
+  delta_local_flat: 0.1
+  gamma_sharp: 0.05
+  grad_clip_norm: 5.0
+  lr: 5.0e-05
+  n_steps: 5000
+  nonlinear_classifier: false
+  vit_freeze_backbone: true
+  vit_model_name: vit_large_patch16_224
+  vit_prompt_dropout: 0.1
+  vit_prompt_length: 20
+  weight_decay: 0.0
+output_dir: experiments/vitl14_fedcuri_vlcs/split2
+seed: 2

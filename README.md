@@ -1,8 +1,20 @@
-# HyperDG: Controlled Re-evaluation
+# HyperDG
 
-**Paper:** *Do Domain-Specific Curvature Scales Improve Domain Generalization? A Controlled Re-evaluation of HyperDG*
+**Sunny Gupta and Amit Sethi** · Indian Institute of Technology Bombay
 
-This repository contains an implementation-faithful, controlled negative-result study of a curvature-inspired domain-generalization objective. The revised paper does **not** claim state-of-the-art performance or that per-domain curvature improves generalization.
+**Historical manuscript:** *HyperDG: Hyperbolic Representation Alignment for Robust Domain Generalization via Curvature Refinement*
+
+- [Author-attributed repository PDF](paper/7459/main.pdf)
+- [Original supplementary PDF](paper/7459/supplementary.pdf)
+- [Original OpenReview submission #7459](https://openreview.net/forum?id=TSshrjqnXu)
+- [Accepted follow-up and its six-condition experiment artifact](https://github.com/sunnyinAI/HyperDG-Plus)
+- [Reproduction instructions](reproduction/README.md)
+
+The repository PDF restores the authorship shown in the original supplement. The manuscript is a historical submission. The archived runs and code document the available implementation, which rescales Euclidean features. The original manuscript describes a Lorentzian method and contains claims that the available code and archived results do not establish. See the follow-up for the audited formulation and findings.
+
+## Intermediate controlled re-evaluation
+
+The files under `HyperDG_TMLR/` and the four-condition results below are an intermediate re-evaluation titled *Do Domain-Specific Curvature Scales Improve Domain Generalization? A Controlled Re-evaluation of HyperDG*.
 
 ## Main Finding
 
@@ -59,17 +71,16 @@ The direct shared-curvature study is only seed 0. PACS, VLCS, and OfficeHome hav
 ## Reproduce the Tables and Figures
 
 ```bash
-conda env create -f environment.yml
-conda activate sftdg
-export PYTHONPATH=third_party/domainbed
+# From a fresh clone, stage the recorded metrics in the ignored output folder.
+cp -R reproduction/recorded/experiments .
+python -m pip install -r reproduction/requirements-analysis.txt
 
 python scripts/aggregate_batch4.py
 python scripts/plot_forest_erm_vs_hyperdg.py
 python scripts/plot_curvature_trajectories.py
-python scripts/aggregate_secondary.py
 ```
 
-Generated evidence is written under `outputs/`:
+Generated and previously archived evidence is under `outputs/`. The secondary aggregation script requires additional completed checkpoints.
 
 - `batch4_per_run.csv`: all 256 primary accuracy observations;
 - `batch4_summary.csv`: means, paired effects, confidence intervals, raw p-values, and Holm-adjusted p-values;
@@ -83,7 +94,7 @@ Generated evidence is written under `outputs/`:
 ## Train a Configuration
 
 ```bash
-PYTHONPATH=third_party/domainbed python scripts/train.py \
+PYTHONPATH=src:third_party/domainbed python scripts/train.py \
   --config configs/training/resnet50_hyperdg_pacs.yaml \
   --device cuda
 ```
@@ -108,7 +119,7 @@ configs/training/resnet50_erm_pacs.yaml
 Example:
 
 ```bash
-PYTHONPATH=third_party/domainbed python scripts/measure_training_time.py \
+PYTHONPATH=src:third_party/domainbed python scripts/measure_training_time.py \
   --configs \
     configs/training/resnet50_erm_pacs.yaml \
     configs/training/resnet50_hyperdg_pacs.yaml \

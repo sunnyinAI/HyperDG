@@ -1,0 +1,27 @@
+algorithm: sft
+dataset:
+  config: configs/datasets/pacs.yaml
+  test_envs:
+  - 2
+device: cuda
+experiment_name: sft_resnet50_pacs
+hparams:
+  alpha: 1.5
+  batch_size: 32
+  checkpoint_freq: 200
+  grad_clip_norm: 5.0
+  label_smoothing: 0.0
+  lambda1: 0.5
+  lambda2: 0.1
+  lr: 5.0e-05
+  n_steps: 5000
+  nonlinear_classifier: false
+  refiner_dropout: 0.1
+  refiner_hidden_dim: 256
+  refiner_layers: 2
+  refiner_lr: 5.0e-05
+  refiner_weight_decay: 0.0
+  rho: 0.05
+  weight_decay: 0.0
+output_dir: experiments/pacs/split2
+seed: 0

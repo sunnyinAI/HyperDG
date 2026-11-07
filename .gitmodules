@@ -1,0 +1,3 @@
+[submodule "third_party/domainbed"]
+	path = third_party/domainbed
+	url = https://github.com/facebookresearch/DomainBed.git

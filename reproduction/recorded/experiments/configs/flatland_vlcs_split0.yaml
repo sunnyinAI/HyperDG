@@ -1,0 +1,21 @@
+algorithm: flatland
+dataset:
+  config: configs/datasets/vlcs.yaml
+  test_envs:
+  - 0
+device: cuda
+experiment_name: flatland_resnet50_vlcs_split0
+hparams:
+  alpha_curv: 0.2
+  batch_size: 32
+  beta_align: 0.5
+  checkpoint_freq: 200
+  curvature_lr: 0.0001
+  gamma_sharp: 0.05
+  grad_clip_norm: 5.0
+  lr: 5.0e-05
+  n_steps: 5000
+  nonlinear_classifier: false
+  weight_decay: 0.0
+output_dir: experiments/flatland_vlcs/split0
+seed: 0
